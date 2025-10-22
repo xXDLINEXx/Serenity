@@ -91,6 +91,11 @@ export const [AudioProvider, useAudio] = createContextHook<AudioContextValue>(()
           const audio = new window.Audio();
           audio.loop = true;
           audio.preload = 'auto';
+          try {
+            audio.crossOrigin = 'anonymous';
+          } catch (_e) {
+            console.log('crossOrigin not settable');
+          }
 
           audio.addEventListener('loadedmetadata', () => {
             setDuration(audio.duration * 1000);
@@ -112,41 +117,58 @@ export const [AudioProvider, useAudio] = createContextHook<AudioContextValue>(()
           audio.addEventListener('error', (_e: Event) => {
             const errorMessage = audio.error?.code === 4 
               ? 'Audio source not supported or CORS blocked'
-              : audio.error?.message || 'Unknown audio error';
+              : (audio.error as any)?.message || 'Unknown audio error';
             console.error('Audio error:', errorMessage);
             console.error('Failed URL:', url);
             console.error('Error code:', audio.error?.code);
-            setIsLoading(false);
           });
 
           audio.addEventListener('canplaythrough', () => {
             console.log('Audio ready to play:', url);
           });
 
-          audio.src = url;
-          
-          try {
-            await audio.play();
-            setSound(audio);
-            setCurrentTrack(url);
-            setCurrentTitle(title);
-            setIsPlaying(true);
-
-            if (timer) {
-              if (timerRef.current) {
-                clearTimeout(timerRef.current);
+          const tryPlay = async (src: string) => {
+            return new Promise<void>(async (resolve, reject) => {
+              try {
+                audio.src = src;
+                await audio.play();
+                resolve();
+              } catch (e) {
+                reject(e);
               }
-              timerRef.current = setTimeout(() => {
-                audio.pause();
-                audio.src = '';
-                setIsPlaying(false);
-                setCurrentTrack(null);
-                setCurrentTitle(null);
-              }, timer * 60 * 1000);
+            });
+          };
+
+          try {
+            await tryPlay(url);
+          } catch (primaryErr) {
+            console.warn('Primary playback failed, trying CORS proxy...', primaryErr);
+            const proxied = `https://cors.isomorphic-git.org/${url}`;
+            try {
+              await tryPlay(proxied);
+            } catch (proxyErr) {
+              console.error('Error starting playback:', proxyErr);
+              setIsLoading(false);
+              throw proxyErr;
             }
-          } catch (playError) {
-            console.error('Error starting playback:', playError);
-            throw playError;
+          }
+
+          setSound(audio);
+          setCurrentTrack(url);
+          setCurrentTitle(title);
+          setIsPlaying(true);
+
+          if (timer) {
+            if (timerRef.current) {
+              clearTimeout(timerRef.current);
+            }
+            timerRef.current = setTimeout(() => {
+              audio.pause();
+              audio.src = '';
+              setIsPlaying(false);
+              setCurrentTrack(null);
+              setCurrentTitle(null);
+            }, timer * 60 * 1000);
           }
         } else {
           const { sound: newSound } = await Audio.Sound.createAsync(
