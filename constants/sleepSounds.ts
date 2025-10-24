@@ -14,7 +14,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Son apaisant de la pluie qui tombe',
     icon: 'cloud-rain',
     color: '#60A5FA',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2390/2390-preview.mp3',
   },
   {
     id: 'ocean',
@@ -22,7 +22,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Bruit des vagues qui se brisent sur la plage',
     icon: 'waves',
     color: '#3B82F6',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/06/07/audio_c2eb123cc3.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2487/2487-preview.mp3',
   },
   {
     id: 'forest',
@@ -30,7 +30,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Sons apaisants de la nature en forêt',
     icon: 'trees',
     color: '#10B981',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_90018601b3.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2459/2459-preview.mp3',
   },
   {
     id: 'wind',
@@ -38,7 +38,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Murmure doux du vent dans les arbres',
     icon: 'wind',
     color: '#8B5CF6',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/13/audio_2c98c11a5f.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2460/2460-preview.mp3',
   },
   {
     id: 'fire',
@@ -46,7 +46,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Crépitement relaxant d un feu de bois',
     icon: 'flame',
     color: '#F59E0B',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_11203d1f35.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2377/2377-preview.mp3',
   },
   {
     id: 'river',
@@ -54,7 +54,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Eau qui s écoule paisiblement',
     icon: 'waves',
     color: '#06B6D4',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/13/audio_4ec13f3f49.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2409/2409-preview.mp3',
   },
   {
     id: 'night',
@@ -62,7 +62,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Ambiance nocturne avec grillons',
     icon: 'trees',
     color: '#0EA5E9',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c610232532.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2465/2465-preview.mp3',
   },
   {
     id: 'thunder',
@@ -70,7 +70,7 @@ export const sleepSounds: SleepSound[] = [
     description: 'Tonnerre lointain et pluie douce',
     icon: 'cloud-rain',
     color: '#64748B',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_5ffb858e93.mp3',
+    audioUrl: 'https://assets.mixkit.co/active_storage/sfx/2389/2389-preview.mp3',
   },
   {
     id: 'whitenoise',
