@@ -159,7 +159,27 @@ export const [AudioProvider, useAudio] = createContextHook<AudioContextValue>(()
           audio.addEventListener('error', (e) => {
             const target = e.target as HTMLAudioElement;
             const errorCode = target.error?.code;
-            const errorMessage = (target.error as any)?.message || 'Unknown error';
+            let errorMessage = 'Unknown error';
+            
+            if (target.error) {
+              switch (target.error.code) {
+                case 1:
+                  errorMessage = 'MEDIA_ERR_ABORTED: The fetching process was aborted by the user';
+                  break;
+                case 2:
+                  errorMessage = 'MEDIA_ERR_NETWORK: A network error occurred';
+                  break;
+                case 3:
+                  errorMessage = 'MEDIA_ERR_DECODE: Error occurred while decoding the media';
+                  break;
+                case 4:
+                  errorMessage = 'MEDIA_ERR_SRC_NOT_SUPPORTED: Media format not supported';
+                  break;
+                default:
+                  errorMessage = target.error.message || 'Unknown media error';
+              }
+            }
+            
             console.error('[Audio] Error loading audio:', {
               code: errorCode,
               message: errorMessage,
@@ -188,7 +208,8 @@ export const [AudioProvider, useAudio] = createContextHook<AudioContextValue>(()
               blobUrlRef.current = blobUrl;
               console.log('[Audio] Generated sound playing');
             } catch (err) {
-              console.error('[Audio] Generation failed:', err);
+              const errorMessage = err instanceof Error ? err.message : String(err);
+              console.error('[Audio] Generation failed:', errorMessage, err);
               setIsLoading(false);
               return;
             }
@@ -204,7 +225,8 @@ export const [AudioProvider, useAudio] = createContextHook<AudioContextValue>(()
               await audio.play();
               console.log('[Audio] Playing successfully');
             } catch (err) {
-              console.error('[Audio] Failed to load direct src:', err);
+              const errorMessage = err instanceof Error ? err.message : String(err);
+              console.error('[Audio] Failed to load direct src:', errorMessage, err);
               setIsLoading(false);
               return;
             }
@@ -255,13 +277,15 @@ export const [AudioProvider, useAudio] = createContextHook<AudioContextValue>(()
               }, timer * 60 * 1000);
             }
           } catch (err) {
-            console.error('[Audio] Native playback error:', err);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            console.error('[Audio] Native playback error:', errorMessage, err);
             setIsLoading(false);
             return;
           }
         }
       } catch (error) {
-        console.error('[Audio] Playback error:', error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error('[Audio] Playback error:', errorMessage, error);
       } finally {
         setIsLoading(false);
       }
