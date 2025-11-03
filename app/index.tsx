@@ -7,21 +7,17 @@ import {
   TouchableOpacity,
   StatusBar,
   Platform,
+  ImageBackground,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
-  CloudRain,
-  Waves,
-  Trees,
-  Wind,
-  Flame,
-  Radio,
+  Clock,
   Play,
   Pause,
-  Clock,
   X,
 } from 'lucide-react-native';
 import { healingFrequencies, HealingFrequency } from '@/constants/frequencies';
@@ -29,13 +25,18 @@ import { sleepSounds, SleepSound } from '@/constants/sleepSounds';
 import { useAudio } from '@/contexts/AudioContext';
 import React from "react";
 
-const iconMap: Record<string, any> = {
-  'cloud-rain': CloudRain,
-  waves: Waves,
-  trees: Trees,
-  wind: Wind,
-  flame: Flame,
-  radio: Radio,
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const thumbnailMap: Record<string, string> = {
+  rain: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=800&q=80',
+  ocean: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800&q=80',
+  forest: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80',
+  wind: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?w=800&q=80',
+  fire: 'https://images.unsplash.com/photo-1525771904015-d04fe2a49fde?w=800&q=80',
+  river: 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800&q=80',
+  night: 'https://images.unsplash.com/photo-1532978379173-0e57f91b750f?w=800&q=80',
+  thunder: 'https://images.unsplash.com/photo-1429552077091-836152271555?w=800&q=80',
+  whitenoise: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&q=80',
 };
 
 function BlurContainer({ children, style }: { children: React.ReactNode; style?: any }) {
@@ -76,10 +77,10 @@ export default function HomeScreen() {
   return (
     <View style={styles.container} testID="home-screen">
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#0F172A', '#1E293B', '#334155']} style={styles.gradient}>
+      <View style={[styles.backgroundContainer, { backgroundColor: '#0A0A0F' }]}>
         <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-          <Text style={styles.headerTitle}>Sommeil & Guérison</Text>
-          <Text style={styles.headerSubtitle}>Sons apaisants et fréquences sacrées</Text>
+          <Text style={styles.headerTitle}>Sleep Sounds</Text>
+          <Text style={styles.headerSubtitle}>Peaceful audio for better sleep</Text>
         </View>
 
         <View style={styles.tabContainer} testID="tabs">
@@ -88,14 +89,14 @@ export default function HomeScreen() {
             onPress={() => setActiveTab('sounds')}
             testID="tab-sounds"
           >
-            <Text style={[styles.tabText, activeTab === 'sounds' && styles.tabTextActive]}>Sons de sommeil</Text>
+            <Text style={[styles.tabText, activeTab === 'sounds' && styles.tabTextActive]}>Sounds</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tab, activeTab === 'frequencies' && styles.tabActive]}
             onPress={() => setActiveTab('frequencies')}
             testID="tab-frequencies"
           >
-            <Text style={[styles.tabText, activeTab === 'frequencies' && styles.tabTextActive]}>Fréquences sacrées</Text>
+            <Text style={[styles.tabText, activeTab === 'frequencies' && styles.tabTextActive]}>Frequencies</Text>
           </TouchableOpacity>
         </View>
 
@@ -129,7 +130,7 @@ export default function HomeScreen() {
         {audio.currentTrack && <PlayerBar onTimerPress={() => setShowTimerModal(true)} />}
 
         {showTimerModal && <TimerModal onClose={() => setShowTimerModal(false)} />}
-      </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -224,28 +225,30 @@ function TimerModal({ onClose }: { onClose: () => void }) {
 }
 
 function SoundCard({ sound, isPlaying, onPlay }: { sound: SleepSound; isPlaying: boolean; onPlay: () => void }) {
-  const Icon = iconMap[sound.icon];
+  const thumbnailUrl = thumbnailMap[sound.id] || thumbnailMap.rain;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPlay} activeOpacity={0.8} testID={`sound-card-${sound.id}`}>
-      <BlurContainer style={styles.cardBlur}>
-        <View style={styles.cardContent}>
-          <View style={[styles.iconContainer, { backgroundColor: sound.color }]}> 
-            <Icon size={32} color="#FFFFFF" strokeWidth={2} />
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={onPlay} 
+      activeOpacity={0.9} 
+      testID={`sound-card-${sound.id}`}
+    >
+      <ImageBackground
+        source={{ uri: thumbnailUrl }}
+        style={styles.cardImage}
+        imageStyle={styles.cardImageStyle}
+      >
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)']}
+          style={styles.cardGradient}
+        >
+          <View style={styles.cardContentNew}>
+            <Text style={styles.cardTitleNew}>{sound.title}</Text>
+            <Text style={styles.cardDescriptionNew}>{sound.description}</Text>
           </View>
-          <View style={styles.cardTextContainer}>
-            <Text style={styles.cardTitle}>{sound.title}</Text>
-            <Text style={styles.cardDescription}>{sound.description}</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.playButton, isPlaying && styles.playButtonActive]}
-            onPress={onPlay}
-            testID={`play-sound-${sound.id}`}
-          >
-            {isPlaying ? <Pause size={24} color="#FFFFFF" fill="#FFFFFF" /> : <Play size={24} color="#FFFFFF" fill="#FFFFFF" />}
-          </TouchableOpacity>
-        </View>
-      </BlurContainer>
+        </LinearGradient>
+      </ImageBackground>
     </TouchableOpacity>
   );
 }
@@ -259,27 +262,42 @@ function FrequencyCard({
   isPlaying: boolean;
   onPlay: () => void;
 }) {
+  const frequencyImages: Record<string, string> = {
+    '174': 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
+    '285': 'https://images.unsplash.com/photo-1464802686167-b939a6910659?w=800&q=80',
+    '396': 'https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?w=800&q=80',
+    '417': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=800&q=80',
+    '528': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+    '639': 'https://images.unsplash.com/photo-1444080748397-f442aa95c3e5?w=800&q=80',
+    '741': 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=800&q=80',
+    '852': 'https://images.unsplash.com/photo-1520034475321-cbe63696469a?w=800&q=80',
+    '963': 'https://images.unsplash.com/photo-1472552944129-b035e9ea3744?w=800&q=80',
+  };
+  
+  const thumbnailUrl = frequencyImages[frequency.frequency] || 'https://images.unsplash.com/photo-1511576661531-b34d7da5d0bb?w=800&q=80';
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPlay} activeOpacity={0.8} testID={`frequency-card-${frequency.id}`}>
-      <BlurContainer style={styles.cardBlur}>
-        <View style={styles.cardContent}>
-          <View style={[styles.frequencyBadge, { backgroundColor: frequency.color }]}>
-            <Text style={styles.frequencyNumber}>{frequency.frequency}</Text>
-            <Text style={styles.frequencyUnit}>Hz</Text>
+    <TouchableOpacity 
+      style={styles.card} 
+      onPress={onPlay} 
+      activeOpacity={0.9} 
+      testID={`frequency-card-${frequency.id}`}
+    >
+      <ImageBackground
+        source={{ uri: thumbnailUrl }}
+        style={styles.cardImage}
+        imageStyle={styles.cardImageStyle}
+      >
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.85)']}
+          style={styles.cardGradient}
+        >
+          <View style={styles.cardContentNew}>
+            <Text style={styles.cardTitleNew}>{frequency.title}</Text>
+            <Text style={styles.cardDescriptionNew}>{frequency.frequency} Hz • {frequency.description}</Text>
           </View>
-          <View style={styles.cardTextContainer}>
-            <Text style={styles.cardTitle}>{frequency.title}</Text>
-            <Text style={styles.cardDescription}>{frequency.description}</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.playButton, isPlaying && styles.playButtonActive]}
-            onPress={onPlay}
-            testID={`play-frequency-${frequency.id}`}
-          >
-            {isPlaying ? <Pause size={24} color="#FFFFFF" fill="#FFFFFF" /> : <Play size={24} color="#FFFFFF" fill="#FFFFFF" />}
-          </TouchableOpacity>
-        </View>
-      </BlurContainer>
+        </LinearGradient>
+      </ImageBackground>
     </TouchableOpacity>
   );
 }
@@ -287,47 +305,48 @@ function FrequencyCard({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0A0A0F',
   },
-  gradient: {
+  backgroundContainer: {
     flex: 1,
   },
   header: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '700' as const,
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginBottom: 4,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
-    fontSize: 16,
-    color: '#94A3B8',
+    fontSize: 15,
+    color: '#9CA3AF',
     fontWeight: '400' as const,
   },
   tabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    marginBottom: 20,
     gap: 12,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600' as const,
-    color: '#94A3B8',
+    color: '#6B7280',
   },
   tabTextActive: {
     color: '#FFFFFF',
@@ -336,72 +355,41 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
   },
   card: {
     marginBottom: 16,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  cardBlur: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    gap: 16,
-  },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  frequencyBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  frequencyNumber: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: '#1E293B',
-  },
-  frequencyUnit: {
-    fontSize: 12,
-    fontWeight: '600' as const,
-    color: '#475569',
-  },
-  cardTextContainer: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  cardDescription: {
-    fontSize: 14,
-    color: '#94A3B8',
-    lineHeight: 20,
-  },
-  playButton: {
-    width: 48,
-    height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(139, 92, 246, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
+    height: 280,
+    width: SCREEN_WIDTH - 32,
   },
-  playButtonActive: {
-    backgroundColor: '#8B5CF6',
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cardImageStyle: {
+    borderRadius: 24,
+  },
+  cardGradient: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  cardContentNew: {
+    padding: 24,
+    paddingBottom: 28,
+  },
+  cardTitleNew: {
+    fontSize: 26,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 6,
+    letterSpacing: 0.3,
+  },
+  cardDescriptionNew: {
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.8)',
+    lineHeight: 20,
   },
   bottomSpacer: {
     height: 100,
