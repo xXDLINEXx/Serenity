@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import sounds from '../soundsConfig.json';
-import { SoundPlayer } from '@/components/SoundPlayer';
+import SoundPlayer from '@/components/SoundPlayer'; // ✅ Correction ici
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -36,7 +36,9 @@ export default function HomeScreen() {
           style={[styles.tab, activeTab === 'frequencies' && styles.tabActive]}
           onPress={() => setActiveTab('frequencies')}
         >
-          <Text style={[styles.tabText, activeTab === 'frequencies' && styles.tabTextActive]}>Fréquences</Text>
+          <Text style={[styles.tabText, activeTab === 'frequencies' && styles.tabTextActive]}>
+            Fréquences
+          </Text>
         </TouchableOpacity>
       </View>
 
