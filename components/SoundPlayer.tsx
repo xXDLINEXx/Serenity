@@ -1,10 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
-import { Audio } from 'expo-audio';
-import { VideoView, ResizeMode } from 'expo-video';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { SoundConfig } from '@/types/soundsConfig';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+} from "react-native";
+import { Video } from "expo-video";
+import { Audio } from "expo-av";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  runOnJS,
+} from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
+import { SoundConfig } from "@/types/soundsConfig";
+
+const { width, height } = Dimensions.get("window");
 
 interface SoundPlayerProps {
   sound: SoundConfig;
@@ -12,135 +27,104 @@ interface SoundPlayerProps {
 }
 
 export default function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
-  const [audioSound, setAudioSound] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
-  const videoRef = useRef<any>(null);
+  const [audioSound, setAudioSound] = useState<Audio.Sound | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const audioUri = sound.audio || sound.frequency || null;
-  const videoUri = sound.video || null;
+  const translateY = useSharedValue(0);
+
+  const handleGestureEnd = () => {
+    if (translateY.value > height * 0.25) {
+      runOnJS(onClose)(); // Ferme si assez swipé
+    } else {
+      translateY.value = withSpring(0); // Retour au centre
+    }
+  };
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translateY.value = event.translationY;
+    })
+    .onEnd(handleGestureEnd);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
 
   useEffect(() => {
-    loadAndPlay();
-    return () => cleanup();
-  }, [sound]);
+    const loadAudio = async () => {
+      try {
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: sound.audio! },
+          { shouldPlay: true, isLooping: true }
+        );
+        setAudioSound(newSound);
+      } catch (error) {
+        console.error("Audio load error", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const loadAndPlay = async () => {
-    if (!audioUri) return;
-    setIsLoading(true);
+    loadAudio();
 
-    try {
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUri },
-        { shouldPlay: true, isLooping: true, volume }
-      );
-
-      setAudioSound(newSound);
-      setIsPlaying(true);
-    } catch (e) {
-      console.error('Audio load error:', e);
-    }
-    setIsLoading(false);
-  };
-
-  const cleanup = async () => {
-    if (audioSound) await audioSound.unloadAsync();
-  };
-
-  const togglePlayPause = async () => {
-    if (!audioSound) return;
-    isPlaying ? await audioSound.pauseAsync() : await audioSound.playAsync();
-    setIsPlaying(!isPlaying);
-  };
-
-  const stopAudio = async () => {
-    if (!audioSound) return;
-    await audioSound.stopAsync();
-    setIsPlaying(false);
-  };
-
-  const changeVolume = async (v: number) => {
-    setVolume(v);
-    if (audioSound) await audioSound.setVolumeAsync(v);
-  };
-
-  const toggleMute = async () => {
-    const newMute = !isMuted;
-    setIsMuted(newMute);
-    if (audioSound) await audioSound.setVolumeAsync(newMute ? 0 : volume);
-  };
+    return () => {
+      audioSound?.unloadAsync();
+    };
+  }, []);
 
   return (
-    <View style={styles.container}>
-      {videoUri && (
-        <VideoView
-          ref={videoRef}
-          source={{ uri: videoUri }}
-          resizeMode={ResizeMode.COVER}
-          style={styles.video}
-          isLooping
-          shouldPlay
-          muted
-        />
-      )}
+    <GestureDetector gesture={panGesture}>
+      <Animated.View style={[styles.container, animatedStyle]}>
+        {sound.video && (
+          <Video
+            source={{ uri: sound.video }}
+            style={styles.video}
+            shouldPlay
+            isLooping
+            resizeMode="cover"
+          />
+        )}
 
-      <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']} style={styles.overlay}>
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Ionicons name="close" size={30} color="#fff" />
-        </TouchableOpacity>
-
-        <Text style={styles.title}>{sound.title}</Text>
-
-        {isLoading && <ActivityIndicator size="large" color="#fff" />}
-
-        <View style={styles.controls}>
-          <TouchableOpacity onPress={togglePlayPause} style={styles.playButton}>
-            <Ionicons name={isPlaying ? 'pause' : 'play'} size={42} color="#fff" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={stopAudio} style={styles.stopButton}>
-            <Ionicons name="stop" size={32} color="#fff" />
+        <View style={styles.overlay}>
+          <Text style={styles.title}>{sound.title}</Text>
+          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+            <Ionicons name="close" size={32} color="white" />
           </TouchableOpacity>
         </View>
-
-        <View style={styles.volumeControls}>
-          <TouchableOpacity onPress={toggleMute}>
-            <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={26} color="#fff" />
-          </TouchableOpacity>
-
-          <View style={styles.volumeDots}>
-            {[0.2, 0.4, 0.6, 0.8, 1].map(v => (
-              <TouchableOpacity
-                key={v}
-                style={[styles.dot, volume >= v && !isMuted ? styles.dotActive : null]}
-                onPress={() => changeVolume(v)}
-              />
-            ))}
-          </View>
-        </View>
-      </LinearGradient>
-    </View>
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
-const { height, width } = Dimensions.get('window');
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'black' },
-  video: { width, height },
-  overlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    padding: 20, justifyContent: 'space-between'
+  container: {
+    position: "absolute",
+    width,
+    height,
+    top: 0,
+    left: 0,
+    backgroundColor: "#000",
   },
-  closeButton: { alignSelf: 'flex-end', padding: 10 },
-  title: { fontSize: 28, color: '#fff', textAlign: 'center', marginVertical: 15 },
-  controls: { flexDirection: 'row', justifyContent: 'center', gap: 30 },
-  playButton: { padding: 20 },
-  stopButton: { padding: 20 },
-  volumeControls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
-  volumeDots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 12, height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.3)' },
-  dotActive: { backgroundColor: '#fff' },
+  video: {
+    width: "100%",
+    height: "100%",
+  },
+  overlay: {
+    position: "absolute",
+    bottom: 40,
+    left: 20,
+    right: 20,
+    alignItems: "center",
+  },
+  title: {
+    color: "#fff",
+    fontSize: 26,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+  closeButton: {
+    padding: 12,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
 });
