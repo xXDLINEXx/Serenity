@@ -1,21 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { SoundConfig } from "@/types/soundsConfig";
 
-export interface SoundItem {
-  title: string;
-  type: string;
-  audio?: string | null;
-  video?: string | null;
-  frequency?: string | null;
-  description?: string | null;
-  benefits?: string | null;
-}
+const CONFIG_URL = "https://cdn.jsdelivr.net/gh/xXDLINEXx/serenity/soundsConfig.json";
 
 export const useSoundsConfig = () => {
-  const CONFIG_URL =
-    "https://cdn.jsdelivr.net/gh/xXDLINEXx/serenity/soundsConfig.json";
-
-  return useQuery<SoundItem[]>({
-    queryKey: ["sounds-config"],
+  return useQuery<SoundConfig[]>({
+    queryKey: ["sounds-config", CONFIG_URL],
     queryFn: async () => {
       console.log('[useSoundsConfig] Fetching from:', CONFIG_URL);
       
