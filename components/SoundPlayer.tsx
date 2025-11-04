@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { Audio, AVPlaybackStatus } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, Pause, X, Volume2, VolumeX, SkipBack } from 'lucide-react-native';
 import { SoundConfig } from '@/types/soundsConfig';
@@ -24,11 +24,21 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const videoRef = useRef<any>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const player = useVideoPlayer(videoUrl || '', (player) => {
+    player.loop = true;
+    player.muted = true;
+  });
 
   useEffect(() => {
     console.log('[SoundPlayer] Mounting with sound:', sound.title);
     setupAudio();
+    
+    const videoSource = sound.video || (sound.frequency ? sound.video : null);
+    if (videoSource) {
+      console.log('[SoundPlayer] Loading video from:', videoSource);
+      setVideoUrl(videoSource);
+    }
     
     return () => {
       console.log('[SoundPlayer] Unmounting, cleaning up');
@@ -37,10 +47,8 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
           if (audioSound) {
             await audioSound.unloadAsync();
           }
-          if (videoRef.current && Platform.OS !== 'web') {
-            if (videoRef.current.stopAsync) {
-              await videoRef.current.stopAsync();
-            }
+          if (player) {
+            player.pause();
           }
         } catch (error) {
           console.error('[SoundPlayer] Cleanup error:', error);
@@ -48,7 +56,7 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
       };
       performCleanup();
     };
-  }, []);
+  }, [audioSound, player, sound.title, sound.video, sound.frequency]);
 
   const setupAudio = async () => {
     try {
@@ -69,11 +77,9 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
         console.log('[SoundPlayer] Unloading audio');
         await audioSound.unloadAsync();
       }
-      if (videoRef.current && Platform.OS !== 'web') {
-        console.log('[SoundPlayer] Stopping video');
-        if (videoRef.current.stopAsync) {
-          await videoRef.current.stopAsync();
-        }
+      if (player) {
+        console.log('[SoundPlayer] Pausing video');
+        player.pause();
       }
     } catch (error) {
       console.error('[SoundPlayer] Error during cleanup:', error);
@@ -109,8 +115,9 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
       setIsPlaying(true);
       console.log('[SoundPlayer] Audio loaded and playing');
 
-      if (sound.video || sound.frequency) {
-        console.log('[SoundPlayer] Video URL available');
+      if (player && videoUrl) {
+        console.log('[SoundPlayer] Starting video playback');
+        player.play();
       }
 
     } catch (error) {
@@ -137,9 +144,11 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
       if (isPlaying) {
         console.log('[SoundPlayer] Pausing');
         await audioSound.pauseAsync();
+        if (player) player.pause();
       } else {
         console.log('[SoundPlayer] Resuming');
         await audioSound.playAsync();
+        if (player) player.play();
       }
     } catch (error) {
       console.error('[SoundPlayer] Error toggling playback:', error);
@@ -154,6 +163,10 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
         await audioSound.stopAsync();
         setIsPlaying(false);
       }
+      if (player) {
+        player.pause();
+        player.currentTime = 0;
+      }
     } catch (error) {
       console.error('[SoundPlayer] Error stopping:', error);
     }
@@ -167,6 +180,10 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
         await audioSound.playAsync();
       } else {
         await loadAndPlay();
+      }
+      if (player) {
+        player.currentTime = 0;
+        player.play();
       }
     } catch (error) {
       console.error('[SoundPlayer] Error restarting:', error);
@@ -203,8 +220,19 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
 
   return (
     <View style={styles.container}>
+      {videoUrl && (
+        <View style={styles.videoContainer}>
+          <VideoView
+            player={player}
+            style={styles.video}
+            contentFit="cover"
+            nativeControls={false}
+          />
+          <View style={styles.videoOverlay} />
+        </View>
+      )}
       <LinearGradient
-        colors={['#1E1B4B', '#312E81', '#4C1D95']}
+        colors={videoUrl ? ['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)'] : ['#1E1B4B', '#312E81', '#4C1D95']}
         style={styles.gradient}
       >
         <View style={styles.header}>
@@ -309,6 +337,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1E1B4B',
+  },
+  videoContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  },
+  videoOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
   },
   gradient: {
     flex: 1,

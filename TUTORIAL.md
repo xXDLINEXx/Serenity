@@ -149,11 +149,13 @@ interface SoundConfig {
 - États de chargement/erreur
 
 #### `<SoundPlayer />` (composant)
-- Lecteur audio/vidéo complet
+- Lecteur audio/vidéo complet avec **expo-av** et **expo-video**
+- **Vidéo en plein écran** avec overlay transparent
 - Contrôles : lecture, pause, stop, restart
 - Contrôle du volume avec slider visuel
 - Affichage des infos (titre, description, bienfaits)
 - Gestion des erreurs de chargement
+- **Synchronisation parfaite** audio/vidéo
 
 ## 📝 Notes techniques
 
@@ -201,18 +203,33 @@ export default [...]
 
 ### Vidéo ne s'affiche pas
 
-1. La vidéo n'est pas encore implémentée dans le player actuel
-2. Prochaine étape : intégrer `expo-av` Video component
-3. Les URLs vidéo sont déjà parsées et disponibles
+1. Vérifiez que les URLs des vidéos sont correctes
+2. Testez les URLs directement dans le navigateur
+3. Vérifiez que les fichiers vidéo sont uploadés sur GitHub
+4. Regardez les logs console : `[SoundPlayer] Loading video from:`
+
+## ✨ Fonctionnalités avancées
+
+### Lecture simultanée Audio + Vidéo
+
+- ✅ **Audio** : Expo AV avec loop automatique
+- ✅ **Vidéo** : Expo Video en plein écran avec loop
+- ✅ **Synchronisation** : Les deux se lancent ensemble
+- ✅ **Contrôles** : Play/Pause contrôle les deux médias simultanément
+
+### Vidéo en arrière-plan
+
+- La vidéo s'affiche en **plein écran** avec un overlay semi-transparent
+- Les contrôles et infos sont affichés par-dessus
+- Si aucune vidéo n'est disponible, un gradient coloré est affiché
 
 ## 🎯 Prochaines étapes
 
-1. **Intégrer le composant Video** d'expo-av dans SoundPlayer
-2. **Synchroniser audio + vidéo** pour lecture simultanée
-3. **Ajouter animations** pendant la lecture
-4. **Implémenter favoris** (stockage local)
-5. **Ajouter timer de sommeil** dans le CDN player
-6. **Préchargement avancé** des prochains sons
+1. **Ajouter animations** pendant la lecture
+2. **Implémenter favoris** (stockage local)
+3. **Ajouter timer de sommeil** dans le CDN player
+4. **Préchargement avancé** des prochains sons
+5. **Ajouter playlists personnalisées**
 
 ## 📚 Ressources
 
