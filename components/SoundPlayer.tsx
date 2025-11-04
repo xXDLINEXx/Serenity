@@ -5,12 +5,46 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { Audio, AVPlaybackStatus, Video, ResizeMode } from 'expo-av';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SoundConfig } from '@/types/soundsConfig';
+
+// Map des fichiers audio locaux
+const audioMap: Record<string, any> = {
+  "Vent léger": require('../media/audio/vent-leger.mp3'),
+  "Vague de l'océan": require('../media/audio/vague-de-locean.mp3'),
+  "Rivière calme": require('../media/audio/riviere-calme.mp3'),
+  "Pluie douce": require('../media/audio/pluie-douce.mp3'),
+  "Orage apaisant": require('../media/audio/orage-apaisant.mp3'),
+  "Forêt paisible": require('../media/audio/foret-paisible.mp3'),
+  "Feu de camp": require('../media/audio/feu-de-camp.mp3'),
+  "Bruit blanc": require('../media/audio/bruit-blanc.mp3'),
+  "4–7 Hz – Avec 417 & 639 Hz": require('../media/frequency/4-7hz-with-417hz-639hz.mp3'),
+  "8–12 Hz": require('../media/frequency/8-to-12-hz.mp3'),
+  "10 Hz": require('../media/frequency/10hz.mp3'),
+  "33 Hz": require('../media/frequency/33hz.mp3'),
+  "66 Hz": require('../media/frequency/66hz.mp3'),
+  "396 Hz – 417 Hz – 639 Hz": require('../media/frequency/396-hz-417-hz-639hz.mp3'),
+  "417 Hz": require('../media/frequency/417hz.mp3'),
+  "852 Hz": require('../media/frequency/852hz.mp3'),
+  "1441 Hz": require('../media/frequency/1441hz.mp3'),
+  "2772 Hz": require('../media/frequency/2772hz.mp3'),
+};
+
+// Map des fichiers vidéo locaux
+const videoMap: Record<string, any> = {
+  "Vent léger": require('../media/video/vent-leger.mp4'),
+  "Vague de l'océan": require('../media/video/vague-de-locean.mp4'),
+  "Rivière calme": require('../media/video/riviere-calme.mp4'),
+  "Pluie douce": require('../media/video/pluie-douce.mp4'),
+  "Orage apaisant": require('../media/video/orage-apaisant.mp4'),
+  "Forêt paisible": require('../media/video/foret-paisible.mp4'),
+  "Feu de camp": require('../media/video/feu-de-camp.mp4'),
+  "Bruit blanc": require('../media/video/bruit-blanc.mp4'),
+  "Frequency Video": require('../media/frequency/frequence.mp4'), // commun aux fréquences
+};
 
 interface SoundPlayerProps {
   sound: SoundConfig;
@@ -26,9 +60,8 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const videoRef = useRef<any>(null);
 
-  // Local asset loading with require
-  const audioSource = sound.audio ? require(sound.audio) : null;
-  const videoSource = sound.video ? require(sound.video) : null;
+  const audioSource = audioMap[sound.title] || null;
+  const videoSource = videoMap[sound.title] || videoMap["Frequency Video"] || null;
 
   useEffect(() => {
     setupAudio();
@@ -165,7 +198,6 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#1E1B4B', '#312E81', '#4C1D95']} style={styles.gradient}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
@@ -174,7 +206,6 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
           <View style={styles.placeholder} />
         </View>
 
-        {/* Video or fallback */}
         {videoSource ? (
           <Video
             ref={videoRef}
@@ -190,7 +221,6 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
           </View>
         )}
 
-        {/* Main content */}
         <View style={styles.content}>
           <Text style={styles.title}>{sound.title}</Text>
 
@@ -202,7 +232,7 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.playButton} onPress={handlePlayPause}>
-              <Ionicons name={isPlaying ? 'pause' : 'play'} size={48} color="#FFFFFF" />
+              <Ionicons name={isPlaying ? "pause" : "play"} size={48} color="#FFFFFF" />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.secondaryButton} onPress={handleStop}>
@@ -213,7 +243,7 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
           <View style={styles.volumeControls}>
             <TouchableOpacity onPress={handleMuteToggle} style={styles.muteButton}>
               <Ionicons
-                name={isMuted ? 'volume-mute' : 'volume-high'}
+                name={isMuted ? "volume-mute" : "volume-high"}
                 size={24}
                 color="#FFFFFF"
               />
@@ -302,9 +332,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   volumeDotActive: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
     backgroundColor: '#FFFFFF',
   },
 });
