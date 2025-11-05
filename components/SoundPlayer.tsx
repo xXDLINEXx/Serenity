@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Audio, AVPlaybackStatus, Video, ResizeMode } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
-import type { SoundEntry } from '@/constants/soundsConfig';
+import type { SoundConfig } from '@/types/soundsConfig';
 
 interface Props {
-  sound: SoundEntry;
+  sound: SoundConfig;
   onClose: () => void;
 }
 
@@ -23,9 +23,9 @@ export function SoundPlayer({ sound, onClose }: Props) {
   const start = useCallback(async () => {
     setLoading(true);
     try {
-      const audioTrack = sound.audio || sound.frequency;
-      const audioSource = typeof audioTrack === 'string' ? { uri: audioTrack } : audioTrack;
-      if (audioSource) {
+      const audioTrack = sound.audio;
+      if (audioTrack) {
+        const audioSource = typeof audioTrack === 'string' ? { uri: audioTrack } : audioTrack;
         const { sound: created } = await Audio.Sound.createAsync(
           audioSource as any,
           { shouldPlay: true, isLooping: true },
