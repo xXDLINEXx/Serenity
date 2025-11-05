@@ -1,40 +1,27 @@
-import { useSoundsConfig } from "@/hooks/useSoundsConfig";
+import { soundsConfig } from "@/constants/soundsConfig";
 import { Text, ScrollView, View, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 
 export default function DebugJson() {
-  const { data, isLoading, error } = useSoundsConfig();
+  const data = soundsConfig;
 
   return (
     <>
-      <Stack.Screen options={{ title: "Debug JSON Config", headerShown: true }} />
+      <Stack.Screen options={{ title: "Debug Local Config", headerShown: true }} />
       <ScrollView style={styles.container}>
         <View style={styles.content}>
-          {isLoading && <Text style={styles.status}>⏳ Chargement…</Text>}
-          
-          {error && (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorTitle}>❌ Erreur</Text>
-              <Text style={styles.errorText}>{String(error)}</Text>
+          <Text style={styles.successTitle}>✅ Configuration locale chargée : {data.length} éléments</Text>
+          {data.map((item, index) => (
+            <View key={index} style={styles.itemBox}>
+              <Text style={styles.itemTitle}>✅ {item.title}</Text>
+              <Text style={styles.itemDetail}>Type: {item.type}</Text>
+              {item.audio && <Text style={styles.itemDetail}>🎵 Audio: {typeof item.audio === 'number' ? 'Local asset' : 'URL'}</Text>}
+              {item.video && <Text style={styles.itemDetail}>🎬 Video: {typeof item.video === 'number' ? 'Local asset' : 'URL'}</Text>}
+              {item.frequency && <Text style={styles.itemDetail}>📡 Frequency: {item.frequency}</Text>}
+              {item.description && <Text style={styles.itemDescription}>{item.description}</Text>}
+              {item.benefits && <Text style={styles.itemBenefits}>{item.benefits}</Text>}
             </View>
-          )}
-          
-          {data && (
-            <>
-              <Text style={styles.successTitle}>✅ Chargé avec succès : {data.length} éléments</Text>
-              {data.map((item, index) => (
-                <View key={index} style={styles.itemBox}>
-                  <Text style={styles.itemTitle}>✅ {item.title}</Text>
-                  <Text style={styles.itemDetail}>Type: {item.type}</Text>
-                  {item.audio && <Text style={styles.itemDetail}>🎵 Audio: oui</Text>}
-                  {item.video && <Text style={styles.itemDetail}>🎬 Video: oui</Text>}
-                  {item.frequency && <Text style={styles.itemDetail}>📡 Frequency: oui</Text>}
-                  {item.description && <Text style={styles.itemDescription}>{item.description}</Text>}
-                  {item.benefits && <Text style={styles.itemBenefits}>{item.benefits}</Text>}
-                </View>
-              ))}
-            </>
-          )}
+          ))}
         </View>
       </ScrollView>
     </>

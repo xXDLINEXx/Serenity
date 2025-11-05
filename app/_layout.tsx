@@ -14,6 +14,10 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="debug-json" options={{ title: "Debug Local Config" }} />
+      <Stack.Screen name="player" options={{ headerShown: false }} />
+      <Stack.Screen name="cdn-player" options={{ headerShown: false }} />
+      <Stack.Screen name="local-player" options={{ headerShown: false }} />
     </Stack>
   );
 }

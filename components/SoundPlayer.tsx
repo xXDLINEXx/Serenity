@@ -59,9 +59,12 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
     setupAudio();
     
     if (sound.video) {
-      console.log('[SoundPlayer] Loading video asset');
-      const videoSource = typeof sound.video === 'string' ? sound.video : sound.video.toString();
-      setVideoUrl(videoSource);
+      console.log('[SoundPlayer] Loading video asset:', sound.video);
+      if (typeof sound.video === 'number') {
+        setVideoUrl(String(sound.video));
+      } else if (typeof sound.video === 'string') {
+        setVideoUrl(sound.video);
+      }
     }
     
     return () => {
@@ -116,9 +119,9 @@ export function SoundPlayer({ sound, onClose }: SoundPlayerProps) {
 
       console.log('[SoundPlayer] Loading audio asset:', audioAsset);
       
-      const audioSource = typeof audioAsset === 'string' 
-        ? { uri: audioAsset } 
-        : audioAsset;
+      const audioSource = typeof audioAsset === 'number' 
+        ? audioAsset
+        : (typeof audioAsset === 'string' ? { uri: audioAsset } : audioAsset);
       
       const { sound: newSound } = await Audio.Sound.createAsync(
         audioSource,
