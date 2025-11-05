@@ -1,8 +1,8 @@
 export interface SoundConfig {
   title: string;
   type: string;
-  audio?: number | null;
-  video?: number | null;
+  audio?: string | number | null;
+  video?: string | number | null;
   frequency?: string | null;
   description?: string | null;
   benefits?: string | null;
