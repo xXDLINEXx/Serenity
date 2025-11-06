@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AudioProvider } from "@/contexts/AudioContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { BootScreen } from "@/components/BootScreen";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,9 +24,15 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [showBoot, setShowBoot] = useState(true);
+
   useEffect(() => {
     SplashScreen.hideAsync();
   }, []);
+
+  const handleBootFinish = () => {
+    setShowBoot(false);
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -33,6 +40,7 @@ export default function RootLayout() {
         <AudioProvider>
           <ErrorBoundary>
             <RootLayoutNav />
+            {showBoot && <BootScreen onFinish={handleBootFinish} />}
           </ErrorBoundary>
         </AudioProvider>
       </GestureHandlerRootView>
