@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Animated, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
@@ -10,33 +10,65 @@ interface BootScreenProps {
 
 export function BootScreen({ onFinish }: BootScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.3)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
-  const textFadeAnim = useRef(new Animated.Value(0)).current;
-  const shimmerAnim = useRef(new Animated.Value(-1)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const star1Anim = useRef(new Animated.Value(0)).current;
+  const star2Anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
-          tension: 40,
-          friction: 8,
+          tension: 50,
+          friction: 7,
           useNativeDriver: true,
         }),
+      ]),
+      Animated.delay(200),
+      Animated.parallel([
         Animated.loop(
           Animated.sequence([
-            Animated.timing(glowAnim, {
+            Animated.timing(rotateAnim, {
+              toValue: 1,
+              duration: 3000,
+              useNativeDriver: true,
+            }),
+            Animated.timing(rotateAnim, {
+              toValue: 0,
+              duration: 3000,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(star1Anim, {
               toValue: 1,
               duration: 1500,
               useNativeDriver: true,
             }),
-            Animated.timing(glowAnim, {
+            Animated.timing(star1Anim, {
+              toValue: 0,
+              duration: 1500,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(750),
+            Animated.timing(star2Anim, {
+              toValue: 1,
+              duration: 1500,
+              useNativeDriver: true,
+            }),
+            Animated.timing(star2Anim, {
               toValue: 0,
               duration: 1500,
               useNativeDriver: true,
@@ -44,26 +76,15 @@ export function BootScreen({ onFinish }: BootScreenProps) {
           ])
         ),
       ]),
-      Animated.delay(200),
-      Animated.timing(textFadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(shimmerAnim, {
-        toValue: 2,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-      Animated.delay(800),
+      Animated.delay(2000),
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
           duration: 600,
           useNativeDriver: true,
         }),
-        Animated.timing(textFadeAnim, {
-          toValue: 0,
+        Animated.timing(scaleAnim, {
+          toValue: 1.1,
           duration: 600,
           useNativeDriver: true,
         }),
@@ -71,22 +92,27 @@ export function BootScreen({ onFinish }: BootScreenProps) {
     ]).start(() => {
       onFinish();
     });
-  }, [fadeAnim, scaleAnim, glowAnim, textFadeAnim, shimmerAnim, onFinish]);
+  }, [fadeAnim, scaleAnim, rotateAnim, star1Anim, star2Anim, onFinish]);
 
-  const glowOpacity = glowAnim.interpolate({
+  const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.3, 0.9],
+    outputRange: ['0deg', '10deg'],
   });
 
-  const shimmerTranslate = shimmerAnim.interpolate({
-    inputRange: [-1, 2],
-    outputRange: [-200, 200],
+  const star1Scale = star1Anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 1.2],
+  });
+
+  const star2Scale = star2Anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.5, 1.2],
   });
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#000000', '#0F0F1A', '#1A1A2E']}
+        colors={['#E8EDF2', '#D6DCE5', '#C4CCD9']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
@@ -96,44 +122,38 @@ export function BootScreen({ onFinish }: BootScreenProps) {
             styles.logoContainer,
             {
               opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
+              transform: [
+                { scale: scaleAnim },
+                { rotate },
+              ],
             },
           ]}
         >
-          <View style={styles.sLogoWrapper}>
+          <View style={styles.imageWrapper}>
             <Animated.View
               style={[
-                styles.glowCircle,
+                styles.star1,
                 {
-                  opacity: glowOpacity,
+                  opacity: star1Anim,
+                  transform: [{ scale: star1Scale }],
                 },
               ]}
             />
-            <View style={styles.sLogo}>
-              <Text style={styles.sText}>S</Text>
-            </View>
+            <Animated.View
+              style={[
+                styles.star2,
+                {
+                  opacity: star2Anim,
+                  transform: [{ scale: star2Scale }],
+                },
+              ]}
+            />
+            <Image
+              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ixs5q48yhwper8dmqv9hy' }}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
-
-          <Animated.View
-            style={[
-              styles.textContainer,
-              {
-                opacity: textFadeAnim,
-              },
-            ]}
-          >
-            <View style={styles.textWrapper}>
-              <Text style={styles.brandText}>SERENITY</Text>
-              <Animated.View
-                style={[
-                  styles.shimmer,
-                  {
-                    transform: [{ translateX: shimmerTranslate }],
-                  },
-                ]}
-              />
-            </View>
-          </Animated.View>
         </Animated.View>
       </LinearGradient>
     </View>
@@ -160,64 +180,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sLogoWrapper: {
+  imageWrapper: {
     position: 'relative',
+    width: 300,
+    height: 300,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 24,
   },
-  glowCircle: {
+  logoImage: {
+    width: '100%',
+    height: '100%',
+  },
+  star1: {
     position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: '#4A90E2',
-    shadowColor: '#4A90E2',
+    top: 40,
+    left: 30,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#A8B8D8',
+    shadowColor: '#A8B8D8',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
-    shadowRadius: 40,
-    elevation: 20,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  sLogo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  sText: {
-    fontSize: 56,
-    fontWeight: '700',
-    color: '#1A1A2E',
-    letterSpacing: -2,
-  },
-  textContainer: {
-    alignItems: 'center',
-  },
-  textWrapper: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  brandText: {
-    fontSize: 32,
-    fontWeight: '300',
-    color: '#ffffff',
-    letterSpacing: 8,
-    textAlign: 'center',
-  },
-  shimmer: {
+  star2: {
     position: 'absolute',
-    top: 0,
-    left: -50,
-    width: 100,
-    height: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    transform: [{ skewX: '-20deg' }],
+    bottom: 80,
+    right: 40,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#A8B8D8',
+    shadowColor: '#A8B8D8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 5,
   },
 });
