@@ -12,43 +12,53 @@ export function BootScreen({ onFinish }: BootScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
+  const wave1 = useRef(new Animated.Value(0)).current;
+  const wave2 = useRef(new Animated.Value(0)).current;
+  const wave3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 1200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: 1200,
-            useNativeDriver: true,
-          }),
-        ])
-      ),
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
     ]).start();
+
+    Animated.loop(
+      Animated.timing(wave1, {
+        toValue: 1,
+        duration: 2500,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.timing(wave2, {
+        toValue: 1,
+        duration: 3000,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.timing(wave3, {
+        toValue: 1,
+        duration: 3500,
+        useNativeDriver: true,
+      })
+    ).start();
 
     const timeout = setTimeout(() => {
       Animated.parallel([
@@ -70,7 +80,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
     return () => {
       clearTimeout(timeout);
     };
-  }, [fadeAnim, scaleAnim, logoOpacity, glowAnim, onFinish]);
+  }, [fadeAnim, scaleAnim, logoOpacity, wave1, wave2, wave3, onFinish]);
 
 
 
@@ -82,17 +92,60 @@ export function BootScreen({ onFinish }: BootScreenProps) {
       >
         <Animated.View
           style={[
-            styles.glowCircle,
+            styles.wave,
+            styles.wave1,
             {
-              opacity: glowAnim.interpolate({
+              opacity: wave1.interpolate({
                 inputRange: [0, 1],
-                outputRange: [0.3, 0.7],
+                outputRange: [0.3, 0.1],
               }),
               transform: [
                 {
-                  scale: glowAnim.interpolate({
+                  scale: wave1.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [1, 1.15],
+                    outputRange: [0.8, 2],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+        
+        <Animated.View
+          style={[
+            styles.wave,
+            styles.wave2,
+            {
+              opacity: wave2.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.4, 0.1],
+              }),
+              transform: [
+                {
+                  scale: wave2.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 2],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
+        
+        <Animated.View
+          style={[
+            styles.wave,
+            styles.wave3,
+            {
+              opacity: wave3.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.5, 0.1],
+              }),
+              transform: [
+                {
+                  scale: wave3.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 2],
                   }),
                 },
               ],
@@ -145,16 +198,21 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
   },
-  glowCircle: {
+  wave: {
     position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    shadowColor: '#3b82f6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 40,
-    elevation: 20,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 2,
+    borderColor: 'rgba(59, 130, 246, 0.5)',
+  },
+  wave1: {
+    borderColor: 'rgba(59, 130, 246, 0.6)',
+  },
+  wave2: {
+    borderColor: 'rgba(96, 165, 250, 0.5)',
+  },
+  wave3: {
+    borderColor: 'rgba(147, 197, 253, 0.4)',
   },
 });
