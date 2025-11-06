@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   iconContainer: {
-    marginBottom: 4,
+    marginBottom: -20,
   },
   logo: {
     width: 600,
@@ -179,6 +179,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     paddingHorizontal: 32,
     maxWidth: 400,
+    marginTop: -30,
     marginBottom: 8,
   },
   grid: {

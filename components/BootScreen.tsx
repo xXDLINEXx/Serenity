@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -10,81 +10,67 @@ interface BootScreenProps {
 
 export function BootScreen({ onFinish }: BootScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  
-  const waves = useMemo(() => 
-    Array.from({ length: 4 }, (_, i) => ({
-      id: i,
-      scaleAnim: new Animated.Value(0),
-      opacityAnim: new Animated.Value(0.6),
-    })),
-  []);
+  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoOpacity, {
-        toValue: 1,
-        duration: 1000,
-        delay: 300,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 40,
-        friction: 8,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    waves.forEach((wave, index) => {
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]),
       Animated.loop(
-        Animated.parallel([
-          Animated.timing(wave.scaleAnim, {
-            toValue: 2.5,
-            duration: 2500,
-            delay: index * 600,
+        Animated.sequence([
+          Animated.timing(glowAnim, {
+            toValue: 1,
+            duration: 1200,
             useNativeDriver: true,
           }),
-          Animated.timing(wave.opacityAnim, {
+          Animated.timing(glowAnim, {
             toValue: 0,
-            duration: 2500,
-            delay: index * 600,
+            duration: 1200,
             useNativeDriver: true,
           }),
         ])
-      ).start(() => {
-        wave.scaleAnim.setValue(0);
-        wave.opacityAnim.setValue(0.6);
-      });
-    });
+      ),
+    ]).start();
 
     const timeout = setTimeout(() => {
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 500,
+          duration: 400,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
-          toValue: 1.3,
-          duration: 500,
+          toValue: 1.2,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]).start(() => {
         onFinish();
       });
-    }, 3000);
+    }, 2500);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [fadeAnim, scaleAnim, logoOpacity, onFinish, waves]);
+  }, [fadeAnim, scaleAnim, logoOpacity, glowAnim, onFinish]);
 
 
 
@@ -94,27 +80,25 @@ export function BootScreen({ onFinish }: BootScreenProps) {
         colors={['#0d0d0d', '#1a1a2e', '#0d0d0d']}
         style={styles.gradient}
       >
-        {waves.map((wave, index) => (
-          <Animated.View
-            key={wave.id}
-            style={[
-              styles.wave,
-              {
-                opacity: wave.opacityAnim,
-                transform: [{ scale: wave.scaleAnim }],
-              },
-            ]}
-          >
-            <LinearGradient
-              colors={[
-                'rgba(147, 51, 234, 0.4)',
-                'rgba(59, 130, 246, 0.4)',
-                'rgba(147, 51, 234, 0.0)',
-              ]}
-              style={styles.waveGradient}
-            />
-          </Animated.View>
-        ))}
+        <Animated.View
+          style={[
+            styles.glowCircle,
+            {
+              opacity: glowAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.3, 0.7],
+              }),
+              transform: [
+                {
+                  scale: glowAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1, 1.15],
+                  }),
+                },
+              ],
+            },
+          ]}
+        />
 
         <Animated.View
           style={[
@@ -125,7 +109,6 @@ export function BootScreen({ onFinish }: BootScreenProps) {
             },
           ]}
         >
-          <View style={styles.logoShadow} />
           <Image
             source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/uiamvomi7oant6plfs9c6' }}
             style={styles.logoImage}
@@ -162,30 +145,16 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
   },
-  logoShadow: {
+  glowCircle: {
     position: 'absolute',
-    width: 400,
-    height: 400,
-    backgroundColor: 'rgba(147, 51, 234, 0.2)',
-    borderRadius: 200,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+    backgroundColor: 'rgba(147, 51, 234, 0.15)',
     shadowColor: '#9333ea',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 30,
-    elevation: 15,
-  },
-  wave: {
-    position: 'absolute',
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    overflow: 'hidden',
-  },
-  waveGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 200,
-    borderWidth: 2,
-    borderColor: 'rgba(147, 51, 234, 0.3)',
+    shadowOpacity: 0.8,
+    shadowRadius: 40,
+    elevation: 20,
   },
 });
