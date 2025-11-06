@@ -112,7 +112,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#E8EDF2', '#D6DCE5', '#C4CCD9']}
+        colors={['#000000', '#0a0a0a', '#000000']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
@@ -198,12 +198,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#A8B8D8',
-    shadowColor: '#A8B8D8',
+    backgroundColor: '#ffffff',
+    shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.9,
+    shadowRadius: 12,
+    elevation: 8,
   },
   star2: {
     position: 'absolute',
@@ -212,11 +212,11 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#A8B8D8',
-    shadowColor: '#A8B8D8',
+    backgroundColor: '#ffffff',
+    shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.9,
+    shadowRadius: 12,
+    elevation: 8,
   },
 });
