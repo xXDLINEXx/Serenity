@@ -81,7 +81,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
           ]}
         >
           <Image
-            source={{ uri: 'https://r2-pub.rork.com/generated-images/4d1b5f1d-0287-4b60-9ef7-c2e1101043c2.png' }}
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/719ruaz0g96bgzbih3j9r' }}
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoImage: {
-    width: 250,
-    height: 120,
+    width: 300,
+    height: 300,
+    backgroundColor: 'transparent',
   },
 });
