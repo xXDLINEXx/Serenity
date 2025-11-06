@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 200,
     height: 120,
+    tintColor: '#FFFFFF',
   },
 
   subtitle: {
