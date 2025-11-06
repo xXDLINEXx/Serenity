@@ -126,12 +126,11 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <Image
-              source={{ uri: 'https://r2-pub.rork.com/generated-images/4d1b5f1d-0287-4b60-9ef7-c2e1101043c2.png' }}
+              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/719ruaz0g96bgzbih3j9r' }}
               style={styles.logo}
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.title}>Serenity</Text>
           <Text style={styles.subtitle}>
             Drift into peaceful sleep with calming sounds and soothing frequencies
           </Text>
@@ -164,22 +163,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 48,
     paddingBottom: 40,
-    backgroundColor: '#0A0D15',
   },
   iconContainer: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   logo: {
-    width: 64,
-    height: 64,
+    width: 200,
+    height: 120,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-    marginBottom: 16,
-    letterSpacing: 0.5,
-  },
+
   subtitle: {
     fontSize: 16,
     color: '#9CA3AF',
