@@ -10,103 +10,129 @@ interface BootScreenProps {
 
 export function BootScreen({ onFinish }: BootScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const star1Anim = useRef(new Animated.Value(0)).current;
-  const star2Anim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.3)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const particleAnim1 = useRef(new Animated.Value(0)).current;
+  const particleAnim2 = useRef(new Animated.Value(0)).current;
+  const particleAnim3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 600,
           useNativeDriver: true,
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
-          tension: 50,
-          friction: 7,
+          tension: 40,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 1200,
           useNativeDriver: true,
         }),
       ]),
-      Animated.delay(200),
+      Animated.delay(400),
       Animated.parallel([
         Animated.loop(
           Animated.sequence([
-            Animated.timing(rotateAnim, {
+            Animated.timing(pulseAnim, {
+              toValue: 1.08,
+              duration: 1800,
+              useNativeDriver: true,
+            }),
+            Animated.timing(pulseAnim, {
+              toValue: 1,
+              duration: 1800,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+        Animated.stagger(300, [
+          Animated.loop(
+            Animated.timing(particleAnim1, {
+              toValue: 1,
+              duration: 2500,
+              useNativeDriver: true,
+            })
+          ),
+          Animated.loop(
+            Animated.timing(particleAnim2, {
               toValue: 1,
               duration: 3000,
               useNativeDriver: true,
-            }),
-            Animated.timing(rotateAnim, {
-              toValue: 0,
-              duration: 3000,
-              useNativeDriver: true,
-            }),
-          ])
-        ),
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(star1Anim, {
+            })
+          ),
+          Animated.loop(
+            Animated.timing(particleAnim3, {
               toValue: 1,
-              duration: 1500,
+              duration: 2800,
               useNativeDriver: true,
-            }),
-            Animated.timing(star1Anim, {
-              toValue: 0,
-              duration: 1500,
-              useNativeDriver: true,
-            }),
-          ])
-        ),
-        Animated.loop(
-          Animated.sequence([
-            Animated.delay(750),
-            Animated.timing(star2Anim, {
-              toValue: 1,
-              duration: 1500,
-              useNativeDriver: true,
-            }),
-            Animated.timing(star2Anim, {
-              toValue: 0,
-              duration: 1500,
-              useNativeDriver: true,
-            }),
-          ])
-        ),
+            })
+          ),
+        ]),
       ]),
-      Animated.delay(2000),
+      Animated.delay(1800),
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 600,
+          duration: 500,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
-          toValue: 1.1,
-          duration: 600,
+          toValue: 1.2,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 500,
           useNativeDriver: true,
         }),
       ]),
     ]).start(() => {
       onFinish();
     });
-  }, [fadeAnim, scaleAnim, rotateAnim, star1Anim, star2Anim, onFinish]);
+  }, [fadeAnim, scaleAnim, glowAnim, pulseAnim, particleAnim1, particleAnim2, particleAnim3, onFinish]);
 
-  const rotate = rotateAnim.interpolate({
+  const particle1Translate = particleAnim1.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '10deg'],
+    outputRange: [0, -120],
   });
 
-  const star1Scale = star1Anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.5, 1.2],
+  const particle1Opacity = particleAnim1.interpolate({
+    inputRange: [0, 0.3, 0.7, 1],
+    outputRange: [0, 1, 0.6, 0],
   });
 
-  const star2Scale = star2Anim.interpolate({
+  const particle2Translate = particleAnim2.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.5, 1.2],
+    outputRange: [0, 100],
+  });
+
+  const particle2Opacity = particleAnim2.interpolate({
+    inputRange: [0, 0.3, 0.7, 1],
+    outputRange: [0, 1, 0.5, 0],
+  });
+
+  const particle3TranslateX = particleAnim3.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -90],
+  });
+
+  const particle3TranslateY = particleAnim3.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 80],
+  });
+
+  const particle3Opacity = particleAnim3.interpolate({
+    inputRange: [0, 0.3, 0.7, 1],
+    outputRange: [0, 1, 0.4, 0],
   });
 
   return (
@@ -122,37 +148,70 @@ export function BootScreen({ onFinish }: BootScreenProps) {
             styles.logoContainer,
             {
               opacity: fadeAnim,
-              transform: [
-                { scale: scaleAnim },
-                { rotate },
-              ],
+              transform: [{ scale: scaleAnim }],
             },
           ]}
         >
           <View style={styles.imageWrapper}>
             <Animated.View
               style={[
-                styles.star1,
+                styles.glowEffect,
+                { opacity: glowAnim },
+              ]}
+            />
+            
+            <Animated.View
+              style={[
+                styles.particle,
+                styles.particle1,
                 {
-                  opacity: star1Anim,
-                  transform: [{ scale: star1Scale }],
+                  opacity: particle1Opacity,
+                  transform: [
+                    { translateY: particle1Translate },
+                    { scale: pulseAnim },
+                  ],
                 },
               ]}
             />
             <Animated.View
               style={[
-                styles.star2,
+                styles.particle,
+                styles.particle2,
                 {
-                  opacity: star2Anim,
-                  transform: [{ scale: star2Scale }],
+                  opacity: particle2Opacity,
+                  transform: [
+                    { translateY: particle2Translate },
+                    { scale: pulseAnim },
+                  ],
                 },
               ]}
             />
-            <Image
-              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ixs5q48yhwper8dmqv9hy' }}
-              style={styles.logoImage}
-              resizeMode="contain"
+            <Animated.View
+              style={[
+                styles.particle,
+                styles.particle3,
+                {
+                  opacity: particle3Opacity,
+                  transform: [
+                    { translateX: particle3TranslateX },
+                    { translateY: particle3TranslateY },
+                    { scale: pulseAnim },
+                  ],
+                },
+              ]}
             />
+            
+            <Animated.View
+              style={[{
+                transform: [{ scale: pulseAnim }],
+              }]}
+            >
+              <Image
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ixs5q48yhwper8dmqv9hy' }}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </Animated.View>
           </View>
         </Animated.View>
       </LinearGradient>
@@ -191,32 +250,41 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  star1: {
+  glowEffect: {
     position: 'absolute',
-    top: 40,
-    left: 30,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 320,
+    height: 320,
+    borderRadius: 160,
     backgroundColor: '#ffffff',
+    opacity: 0.15,
     shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 1,
+    shadowRadius: 60,
+    elevation: 20,
   },
-  star2: {
+  particle: {
     position: 'absolute',
-    bottom: 80,
-    right: 40,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#ffffff',
     shadowColor: '#ffffff',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  particle1: {
+    top: 100,
+    left: 145,
+  },
+  particle2: {
+    bottom: 110,
+    right: 145,
+  },
+  particle3: {
+    top: 140,
+    right: 80,
   },
 });
