@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   StatusBar,
-  Text,
   ScrollView,
   Animated,
   Easing,
@@ -112,10 +111,10 @@ export default function HomeScreen() {
   return (
     <View style={styles.container} testID="home-screen">
       <LinearGradient
-        colors={['#0F172A', '#1E293B', '#334155']}
+        colors={['#0A1628', '#1A2A4A', '#2A3A5A']}
         style={StyleSheet.absoluteFill}
       />
-      <View style={{ backgroundColor: '#0F172A', height: insets.top }} />
+      <View style={{ backgroundColor: '#0A1628', height: insets.top }} />
       <StatusBar barStyle="light-content" />
       
       <ScrollView
@@ -133,10 +132,6 @@ export default function HomeScreen() {
               />
             </Animated.View>
           </View>
-          <Text style={styles.title}>Serenity</Text>
-          <Text style={styles.subtitle}>
-            Drift into peaceful sleep with calming sounds and soothing frequencies
-          </Text>
         </View>
 
         <View style={styles.grid}>
@@ -154,7 +149,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#0A1628',
   },
   scrollView: {
     flex: 1,
@@ -165,28 +160,14 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     paddingTop: 32,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   iconContainer: {
-    marginBottom: 16,
+    marginBottom: 0,
   },
   logo: {
-    width: 80,
-    height: 80,
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.7)',
-    textAlign: 'center',
-    maxWidth: 600,
-    lineHeight: 26,
+    width: 120,
+    height: 120,
   },
   grid: {
     flexDirection: 'row',
