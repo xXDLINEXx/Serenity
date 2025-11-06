@@ -9,57 +9,64 @@ interface BootScreenProps {
 
 export function BootScreen({ onFinish }: BootScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.timing(rotateAnim, {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1200,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 40,
+        friction: 8,
         useNativeDriver: true,
       }),
     ]).start();
 
+    const pulseLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    pulseLoop.start();
+
     const timeout = setTimeout(() => {
+      pulseLoop.stop();
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 500,
+          duration: 400,
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 500,
+          toValue: 0.95,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]).start(() => {
         onFinish();
       });
-    }, 2500);
+    }, 2200);
 
     return () => {
       clearTimeout(timeout);
+      pulseLoop.stop();
     };
-  }, [fadeAnim, scaleAnim, rotateAnim, onFinish]);
-
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+  }, [fadeAnim, scaleAnim, pulseAnim, onFinish]);
 
   return (
     <View style={styles.container}>
@@ -69,7 +76,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
             styles.logoContainer,
             {
               opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }, { rotate }],
+              transform: [{ scale: scaleAnim }, { scale: pulseAnim }],
             },
           ]}
         >
