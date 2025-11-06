@@ -7,9 +7,9 @@ import {
   ScrollView,
   Animated,
   Easing,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Moon } from 'lucide-react-native';
 import { SoundCard } from '@/components/SoundCard';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -126,10 +126,14 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <Moon size={48} color="#8B5CF6" strokeWidth={2} />
+              <Image
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/mhnct787806aiuusxjcgy' }}
+                style={styles.logo}
+                resizeMode="contain"
+              />
             </Animated.View>
           </View>
-          <Text style={styles.title}>Sleep Sounds</Text>
+          <Text style={styles.title}>Serenity</Text>
           <Text style={styles.subtitle}>
             Drift into peaceful sleep with calming sounds and soothing frequencies
           </Text>
@@ -165,6 +169,10 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginBottom: 16,
+  },
+  logo: {
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 48,

@@ -81,7 +81,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
           ]}
         >
           <Image
-            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/homqt3wopggrbjg949z94' }}
+            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/mhnct787806aiuusxjcgy' }}
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -113,7 +113,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoImage: {
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
+    borderRadius: 40,
   },
 });
