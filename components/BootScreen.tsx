@@ -200,7 +200,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
 
         {particles.map((particle, index) => {
           const angle = (index / particles.length) * Math.PI * 2;
-          const radius = 150;
+          const radius = 450;
           const x = Math.cos(angle) * radius;
           const y = Math.sin(angle) * radius;
 
@@ -271,15 +271,15 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoImage: {
-    width: 300,
-    height: 300,
+    width: 900,
+    height: 900,
   },
   logoShadow: {
     position: 'absolute',
-    width: 300,
-    height: 300,
+    width: 900,
+    height: 900,
     backgroundColor: 'rgba(147, 51, 234, 0.3)',
-    borderRadius: 150,
+    borderRadius: 450,
     shadowColor: '#9333ea',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
@@ -288,15 +288,15 @@ const styles = StyleSheet.create({
   },
   glowRing: {
     position: 'absolute',
-    width: 350,
-    height: 350,
-    borderRadius: 175,
+    width: 1050,
+    height: 1050,
+    borderRadius: 525,
     overflow: 'hidden',
   },
   glowRing2: {
-    width: 400,
-    height: 400,
-    borderRadius: 200,
+    width: 1200,
+    height: 1200,
+    borderRadius: 600,
   },
   glowGradient: {
     width: '100%',
