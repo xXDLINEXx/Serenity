@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   StatusBar,
   ScrollView,
@@ -124,14 +125,16 @@ export default function HomeScreen() {
       >
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <Image
-                source={{ uri: 'https://r2-pub.rork.com/generated-images/4d1b5f1d-0287-4b60-9ef7-c2e1101043c2.png' }}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </Animated.View>
+            <Image
+              source={{ uri: 'https://r2-pub.rork.com/generated-images/4d1b5f1d-0287-4b60-9ef7-c2e1101043c2.png' }}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
+          <Text style={styles.title}>Serenity</Text>
+          <Text style={styles.subtitle}>
+            Drift into peaceful sleep with calming sounds and soothing frequencies
+          </Text>
         </View>
 
         <View style={styles.grid}>
@@ -159,15 +162,31 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 32,
-    paddingBottom: 32,
+    paddingTop: 48,
+    paddingBottom: 40,
+    backgroundColor: '#0A0D15',
   },
   iconContainer: {
-    marginBottom: 0,
+    marginBottom: 16,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 64,
+    height: 64,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+    marginBottom: 16,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    textAlign: 'center' as const,
+    lineHeight: 24,
+    paddingHorizontal: 32,
+    maxWidth: 400,
   },
   grid: {
     flexDirection: 'row',
