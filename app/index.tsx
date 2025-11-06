@@ -161,11 +161,11 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   iconContainer: {
-    marginBottom: 16,
+    marginBottom: 4,
   },
   logo: {
     width: 600,

@@ -10,17 +10,14 @@ interface BootScreenProps {
 
 export function BootScreen({ onFinish }: BootScreenProps) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
   
-  const particles = useMemo(() => 
-    Array.from({ length: 12 }, (_, i) => ({
+  const waves = useMemo(() => 
+    Array.from({ length: 4 }, (_, i) => ({
       id: i,
-      fadeAnim: new Animated.Value(0),
       scaleAnim: new Animated.Value(0),
-      translateYAnim: new Animated.Value(0),
+      opacityAnim: new Animated.Value(0.6),
     })),
   []);
 
@@ -28,101 +25,46 @@ export function BootScreen({ onFinish }: BootScreenProps) {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 1000,
+        delay: 300,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 50,
-        friction: 7,
+        tension: 40,
+        friction: 8,
         useNativeDriver: true,
       }),
     ]).start();
 
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    const rotateLoop = Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 3000,
-        useNativeDriver: true,
-      })
-    );
-
-    const glowLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    pulseLoop.start();
-    rotateLoop.start();
-    glowLoop.start();
-
-    particles.forEach((particle, index) => {
+    waves.forEach((wave, index) => {
       Animated.loop(
-        Animated.sequence([
-          Animated.delay(index * 200),
-          Animated.parallel([
-            Animated.timing(particle.fadeAnim, {
-              toValue: 1,
-              duration: 800,
-              useNativeDriver: true,
-            }),
-            Animated.spring(particle.scaleAnim, {
-              toValue: 1,
-              tension: 40,
-              friction: 8,
-              useNativeDriver: true,
-            }),
-            Animated.timing(particle.translateYAnim, {
-              toValue: -50,
-              duration: 2000,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.parallel([
-            Animated.timing(particle.fadeAnim, {
-              toValue: 0,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-            Animated.timing(particle.scaleAnim, {
-              toValue: 0,
-              duration: 600,
-              useNativeDriver: true,
-            }),
-          ]),
+        Animated.parallel([
+          Animated.timing(wave.scaleAnim, {
+            toValue: 2.5,
+            duration: 2500,
+            delay: index * 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(wave.opacityAnim, {
+            toValue: 0,
+            duration: 2500,
+            delay: index * 600,
+            useNativeDriver: true,
+          }),
         ])
-      ).start();
+      ).start(() => {
+        wave.scaleAnim.setValue(0);
+        wave.opacityAnim.setValue(0.6);
+      });
     });
 
     const timeout = setTimeout(() => {
-      pulseLoop.stop();
-      rotateLoop.stop();
-      glowLoop.stop();
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 0,
@@ -130,7 +72,7 @@ export function BootScreen({ onFinish }: BootScreenProps) {
           useNativeDriver: true,
         }),
         Animated.timing(scaleAnim, {
-          toValue: 1.2,
+          toValue: 1.3,
           duration: 500,
           useNativeDriver: true,
         }),
@@ -141,21 +83,10 @@ export function BootScreen({ onFinish }: BootScreenProps) {
 
     return () => {
       clearTimeout(timeout);
-      pulseLoop.stop();
-      rotateLoop.stop();
-      glowLoop.stop();
     };
-  }, [fadeAnim, scaleAnim, pulseAnim, rotateAnim, glowAnim, onFinish, particles]);
+  }, [fadeAnim, scaleAnim, logoOpacity, onFinish, waves]);
 
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
 
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.8],
-  });
 
   return (
     <View style={styles.container}>
@@ -163,77 +94,34 @@ export function BootScreen({ onFinish }: BootScreenProps) {
         colors={['#0d0d0d', '#1a1a2e', '#0d0d0d']}
         style={styles.gradient}
       >
-        <Animated.View
-          style={[
-            styles.glowRing,
-            {
-              opacity: glowOpacity,
-              transform: [{ rotate }, { scale: pulseAnim }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={['rgba(147, 51, 234, 0.3)', 'rgba(59, 130, 246, 0.3)', 'rgba(147, 51, 234, 0.3)']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.glowGradient}
-          />
-        </Animated.View>
-
-        <Animated.View
-          style={[
-            styles.glowRing,
-            styles.glowRing2,
-            {
-              opacity: glowOpacity,
-              transform: [{ rotate: rotate }, { scale: pulseAnim }],
-            },
-          ]}
-        >
-          <LinearGradient
-            colors={['rgba(59, 130, 246, 0.2)', 'rgba(147, 51, 234, 0.2)', 'rgba(59, 130, 246, 0.2)']}
-            start={{ x: 1, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.glowGradient}
-          />
-        </Animated.View>
-
-        {particles.map((particle, index) => {
-          const angle = (index / particles.length) * Math.PI * 2;
-          const radius = 450;
-          const x = Math.cos(angle) * radius;
-          const y = Math.sin(angle) * radius;
-
-          return (
-            <Animated.View
-              key={particle.id}
-              style={[
-                styles.particle,
-                {
-                  left: width / 2 + x - 4,
-                  top: height / 2 + y - 4,
-                  opacity: particle.fadeAnim,
-                  transform: [
-                    { scale: particle.scaleAnim },
-                    { translateY: particle.translateYAnim },
-                  ],
-                },
+        {waves.map((wave, index) => (
+          <Animated.View
+            key={wave.id}
+            style={[
+              styles.wave,
+              {
+                opacity: wave.opacityAnim,
+                transform: [{ scale: wave.scaleAnim }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={[
+                'rgba(147, 51, 234, 0.4)',
+                'rgba(59, 130, 246, 0.4)',
+                'rgba(147, 51, 234, 0.0)',
               ]}
-            >
-              <LinearGradient
-                colors={['rgba(147, 51, 234, 0.8)', 'rgba(59, 130, 246, 0.8)']}
-                style={styles.particleGradient}
-              />
-            </Animated.View>
-          );
-        })}
+              style={styles.waveGradient}
+            />
+          </Animated.View>
+        ))}
 
         <Animated.View
           style={[
             styles.logoContainer,
             {
-              opacity: fadeAnim,
-              transform: [{ scale: Animated.multiply(scaleAnim, pulseAnim) }],
+              opacity: logoOpacity,
+              transform: [{ scale: scaleAnim }],
             },
           ]}
         >
@@ -278,41 +166,26 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 400,
     height: 400,
-    backgroundColor: 'rgba(147, 51, 234, 0.3)',
+    backgroundColor: 'rgba(147, 51, 234, 0.2)',
     borderRadius: 200,
     shadowColor: '#9333ea',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 40,
-    elevation: 20,
+    shadowOpacity: 0.6,
+    shadowRadius: 30,
+    elevation: 15,
   },
-  glowRing: {
+  wave: {
     position: 'absolute',
-    width: 1050,
-    height: 1050,
-    borderRadius: 525,
+    width: 400,
+    height: 400,
+    borderRadius: 200,
     overflow: 'hidden',
   },
-  glowRing2: {
-    width: 1200,
-    height: 1200,
-    borderRadius: 600,
-  },
-  glowGradient: {
+  waveGradient: {
     width: '100%',
     height: '100%',
     borderRadius: 200,
-  },
-  particle: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  particleGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(147, 51, 234, 0.3)',
   },
 });
