@@ -126,8 +126,8 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <Image
-              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/719ruaz0g96bgzbih3j9r' }}
-              style={[styles.logo, { tintColor: '#FFFFFF' }]}
+              source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/uiamvomi7oant6plfs9c6' }}
+              style={styles.logo}
               resizeMode="contain"
             />
           </View>
