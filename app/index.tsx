@@ -8,10 +8,27 @@ import {
   Animated,
   Easing,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SoundCard } from '@/components/SoundCard';
 import { LinearGradient } from 'expo-linear-gradient';
+import { soundsConfig } from '@/constants/soundsConfig';
+import { useAudio } from '@/contexts/AudioContext';
+import { Pause, Play, X } from 'lucide-react-native';
+
+const soundMapping: { [key: string]: string } = {
+  "lake": "Rivière calme",
+  "firecamp": "Feu de camp",
+  "rain": "Pluie douce",
+  "ocean": "Vague de l'océan",
+  "forest": "Forêt paisible",
+  "wind": "Vent léger",
+  "thunder": "Orage apaisant",
+  "stream": "Rivière calme",
+  "night": "Forêt paisible",
+  "meditation": "417 Hz",
+};
 
 const sleepSounds = [
   {
@@ -89,6 +106,14 @@ const sleepSounds = [
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const { isPlaying, currentTitle, pauseSound, stopSound, playSound } = useAudio();
+
+  const getAudioUrlForSound = (soundId: string): string => {
+    const mappedTitle = soundMapping[soundId];
+    const soundConfig = soundsConfig.find((s) => s.title === mappedTitle);
+    const audio = soundConfig?.audio;
+    return typeof audio === 'string' ? audio : '';
+  };
 
   React.useEffect(() => {
     Animated.loop(
@@ -139,11 +164,53 @@ export default function HomeScreen() {
         <View style={styles.grid}>
           {sleepSounds.map((sound) => (
             <View key={sound.id} style={styles.gridItem}>
-              <SoundCard {...sound} />
+              <SoundCard {...sound} audioUrl={getAudioUrlForSound(sound.id)} />
             </View>
           ))}
         </View>
       </ScrollView>
+
+      {currentTitle && (
+        <View style={[styles.miniPlayer, { bottom: insets.bottom + 16 }]}>
+          <LinearGradient
+            colors={['#1E3A8A', '#1E40AF', '#3B82F6']}
+            style={styles.miniPlayerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.miniPlayerContent}>
+              <Text style={styles.miniPlayerTitle} numberOfLines={1}>{currentTitle}</Text>
+              <View style={styles.miniPlayerControls}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    if (isPlaying) {
+                      await pauseSound();
+                    } else {
+                      const currentSound = soundsConfig.find(s => s.title === currentTitle);
+                      if (currentSound && typeof currentSound.audio === 'string') {
+                        await playSound(currentSound.audio, currentSound.title);
+                      }
+                    }
+                  }}
+                  style={styles.miniPlayerButton}
+                >
+                  {isPlaying ? (
+                    <Pause size={24} color="#FFFFFF" fill="#FFFFFF" />
+                  ) : (
+                    <Play size={24} color="#FFFFFF" fill="#FFFFFF" />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => stopSound()}
+                  style={styles.miniPlayerButton}
+                >
+                  <X size={24} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </LinearGradient>
+        </View>
+      )}
     </View>
   );
 }
@@ -191,5 +258,44 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: '100%',
+  },
+  miniPlayer: {
+    position: 'absolute' as const,
+    left: 16,
+    right: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  miniPlayerGradient: {
+    padding: 16,
+  },
+  miniPlayerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  miniPlayerTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+    marginRight: 16,
+  },
+  miniPlayerControls: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  miniPlayerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

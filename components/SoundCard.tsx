@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface SoundCardProps {
   id: string;
@@ -9,17 +9,23 @@ interface SoundCardProps {
   description: string;
   thumbnail: string;
   gradient: string;
+  audioUrl: string;
 }
 
-export function SoundCard({ id, title, description, thumbnail, gradient }: SoundCardProps) {
-  const router = useRouter();
+export function SoundCard({ id, title, description, thumbnail, gradient, audioUrl }: SoundCardProps) {
+  const { playSound, isPlaying, currentTitle } = useAudio();
+  const isCurrentlyPlaying = isPlaying && currentTitle === title;
 
   const gradientColors = parseGradient(gradient);
 
+  const handlePress = async () => {
+    await playSound(audioUrl, title);
+  };
+
   return (
     <TouchableOpacity
-      style={styles.card}
-      onPress={() => router.push(`/local-player?sound=${id}`)}
+      style={[styles.card, isCurrentlyPlaying && styles.cardPlaying]}
+      onPress={handlePress}
       activeOpacity={0.9}
     >
       <ImageBackground
@@ -69,6 +75,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
+  },
+  cardPlaying: {
+    borderWidth: 3,
+    borderColor: '#60A5FA',
   },
   imageBackground: {
     flex: 1,
