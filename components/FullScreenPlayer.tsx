@@ -10,7 +10,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Video, ResizeMode, Audio } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { Audio } from 'expo-av';
 import * as Brightness from 'expo-brightness';
 import { useRouter } from 'expo-router';
 import { X, SkipForward, SkipBack, Volume2 } from 'lucide-react-native';
@@ -34,38 +35,46 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   const [brightness, setBrightness] = useState<number>(0.5);
   const [showControls, setShowControls] = useState<boolean>(true);
   
-  const videoRef = useRef<Video>(null);
+  const videoPlayer = useVideoPlayer(currentMedia?.videoPath || '', player => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
+  
   const soundRef = useRef<Audio.Sound | null>(null);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnimRef = useRef(new Animated.Value(1));
+  const fadeAnim = fadeAnimRef.current;
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     loadMedia();
     
     if (Platform.OS !== 'web') {
-      Brightness.getBrightnessAsync().then(setBrightness);
+      Brightness.getBrightnessAsync().then(setBrightness).catch(console.error);
     }
 
     return () => {
       cleanup();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (currentMedia) {
       loadMedia();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMedia?.id]);
 
   useEffect(() => {
     if (soundRef.current) {
-      soundRef.current.setVolumeAsync(volume);
+      soundRef.current.setVolumeAsync(volume).catch(console.error);
     }
   }, [volume]);
 
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      Brightness.setBrightnessAsync(brightness);
+      Brightness.setBrightnessAsync(brightness).catch(console.error);
     }
   }, [brightness]);
 
@@ -80,6 +89,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         useNativeDriver: true,
       }).start();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showControls]);
 
   const resetControlsTimeout = () => {
@@ -104,7 +114,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         await soundRef.current.stopAsync();
         await soundRef.current.unloadAsync();
       } catch (error) {
-        console.error('Error cleaning up sound:', error);
+        console.error('[FullScreenPlayer] Error cleaning up sound:', error);
       }
       soundRef.current = null;
     }
@@ -115,7 +125,10 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   };
 
   const loadMedia = async () => {
-    if (!currentMedia) return;
+    if (!currentMedia) {
+      console.error('[FullScreenPlayer] No current media');
+      return;
+    }
 
     console.log('[FullScreenPlayer] Loading media:', currentMedia.id);
     console.log('[FullScreenPlayer] Video path:', currentMedia.videoPath);
@@ -130,13 +143,9 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         shouldDuckAndroid: true,
       });
 
-      const audioSource = currentMedia.audioPath.startsWith('http') 
-        ? { uri: currentMedia.audioPath }
-        : (currentMedia.audioPath as any);
-      
       console.log('[FullScreenPlayer] Loading audio...');
       const { sound } = await Audio.Sound.createAsync(
-        audioSource as any,
+        currentMedia.audioPath,
         { 
           isLooping: true, 
           volume: volume,
@@ -147,22 +156,23 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       await sound.playAsync();
       console.log('[FullScreenPlayer] Audio started successfully');
 
-      if (videoRef.current) {
-        const videoSource = currentMedia.videoPath.startsWith('http')
-          ? { uri: currentMedia.videoPath }
-          : (currentMedia.videoPath as any);
-        console.log('[FullScreenPlayer] Loading video with source:', videoSource);
-        await videoRef.current.loadAsync(videoSource as any, { shouldPlay: true });
-        console.log('[FullScreenPlayer] Video started successfully');
+      if (Platform.OS === 'web') {
+        console.log('[FullScreenPlayer] Web platform - video handled by VideoView');
+      } else {
+        console.log('[FullScreenPlayer] Native platform - video handled by VideoView');
       }
+      
+      videoPlayer.replace(currentMedia.videoPath);
+      videoPlayer.play();
+      console.log('[FullScreenPlayer] Video loaded successfully');
     } catch (error) {
       console.error('[FullScreenPlayer] Error loading media:', error);
-      console.error('[FullScreenPlayer] Error details:', JSON.stringify(error, null, 2));
     }
   };
 
   const handleStop = async () => {
     console.log('[FullScreenPlayer] Stop button pressed');
+    videoPlayer.pause();
     await cleanup();
     router.back();
   };
@@ -201,16 +211,27 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     >
       <StatusBar hidden />
       
-      <Video
-        ref={videoRef}
-        style={styles.video}
-        source={(currentMedia.videoPath.startsWith('http') ? { uri: currentMedia.videoPath } : currentMedia.videoPath) as any}
-        resizeMode={ResizeMode.COVER}
-        isLooping
-        isMuted
-        shouldPlay
-        onError={(error) => console.error('[Video Error]:', error)}
-      />
+      {Platform.OS === 'web' ? (
+        <video
+          style={{
+            width: width,
+            height: height,
+            objectFit: 'cover',
+          }}
+          src={currentMedia.videoPath?.uri || currentMedia.videoPath}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      ) : (
+        <VideoView
+          style={styles.video}
+          player={videoPlayer}
+          nativeControls={false}
+          contentFit="cover"
+        />
+      )}
 
       <Animated.View 
         style={[
