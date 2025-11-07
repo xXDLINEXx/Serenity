@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAudio } from '@/contexts/AudioContext';
+import { useRouter } from 'expo-router';
+import { mediaMap } from '@/utils/mediaMap';
 
 interface SoundCardProps {
   id: string;
@@ -13,18 +14,22 @@ interface SoundCardProps {
 }
 
 export function SoundCard({ id, title, description, thumbnail, gradient, audioUrl }: SoundCardProps) {
-  const { playSound, isPlaying, currentTitle } = useAudio();
-  const isCurrentlyPlaying = isPlaying && currentTitle === title;
-
+  const router = useRouter();
   const gradientColors = parseGradient(gradient);
 
-  const handlePress = async () => {
-    await playSound(audioUrl, title);
+  const handlePress = () => {
+    const mediaItem = mediaMap.find(m => m.id === id);
+    if (mediaItem) {
+      console.log('[SoundCard] Opening fullscreen player for:', id);
+      router.push(`/fullscreen-player?mediaId=${id}`);
+    } else {
+      console.log('[SoundCard] Media not found in mediaMap:', id);
+    }
   };
 
   return (
     <TouchableOpacity
-      style={[styles.card, isCurrentlyPlaying && styles.cardPlaying]}
+      style={styles.card}
       onPress={handlePress}
       activeOpacity={0.9}
     >
@@ -76,10 +81,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
   },
-  cardPlaying: {
-    borderWidth: 3,
-    borderColor: '#60A5FA',
-  },
+
   imageBackground: {
     flex: 1,
   },

@@ -19,6 +19,14 @@ function RootLayoutNav() {
       <Stack.Screen name="player" options={{ headerShown: false }} />
       <Stack.Screen name="cdn-player" options={{ headerShown: false }} />
       <Stack.Screen name="local-player" options={{ headerShown: false }} />
+      <Stack.Screen 
+        name="fullscreen-player" 
+        options={{ 
+          headerShown: false,
+          presentation: 'fullScreenModal',
+          animation: 'fade',
+        }} 
+      />
     </Stack>
   );
 }
