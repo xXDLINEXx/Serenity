@@ -16,7 +16,8 @@ import * as Brightness from 'expo-brightness';
 import { useRouter } from 'expo-router';
 import { X, SkipForward, SkipBack, Volume2 } from 'lucide-react-native';
 import Slider from '@react-native-community/slider';
-import { mediaMap, getNextMedia, getPreviousMedia, MediaItem } from '@/utils/mediaMap';
+import { soundsConfig } from '@/constants/soundsConfig';
+import { SoundConfig } from '@/types/soundsConfig';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,18 +25,24 @@ interface FullScreenPlayerProps {
   initialMediaId: string;
 }
 
+function toSource(src: number | string | null | undefined) {
+  if (!src) return undefined;
+  return typeof src === 'number' ? src : { uri: src };
+}
+
 export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-  const [currentMedia, setCurrentMedia] = useState<MediaItem | undefined>(() => 
-    mediaMap.find(m => m.id === initialMediaId)
+  const [currentMedia, setCurrentMedia] = useState<SoundConfig | undefined>(() => 
+    soundsConfig.find(m => m.id === initialMediaId)
   );
   const [volume, setVolume] = useState<number>(1.0);
   const [brightness, setBrightness] = useState<number>(0.5);
   const [showControls, setShowControls] = useState<boolean>(true);
   
-  const videoPlayer = useVideoPlayer(currentMedia?.videoPath || '', player => {
+  const videoSource = toSource(currentMedia?.video);
+  const videoPlayer = useVideoPlayer(videoSource as any, player => {
     player.loop = true;
     player.muted = true;
     player.play();
@@ -131,8 +138,8 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     }
 
     console.log('[FullScreenPlayer] Loading media:', currentMedia.id);
-    console.log('[FullScreenPlayer] Video path:', currentMedia.videoPath);
-    console.log('[FullScreenPlayer] Audio path:', currentMedia.audioPath);
+    console.log('[FullScreenPlayer] Video:', currentMedia.video);
+    console.log('[FullScreenPlayer] Audio:', currentMedia.audio);
 
     await cleanup();
 
@@ -144,8 +151,14 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       });
 
       console.log('[FullScreenPlayer] Loading audio...');
+      const audioSource = toSource(currentMedia.audio);
+      if (!audioSource) {
+        console.warn('[FullScreenPlayer] No audio source available');
+        return;
+      }
+      
       const { sound } = await Audio.Sound.createAsync(
-        currentMedia.audioPath,
+        audioSource as any,
         { 
           isLooping: true, 
           volume: volume,
@@ -156,15 +169,12 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       await sound.playAsync();
       console.log('[FullScreenPlayer] Audio started successfully');
 
-      if (Platform.OS === 'web') {
-        console.log('[FullScreenPlayer] Web platform - video handled by VideoView');
-      } else {
-        console.log('[FullScreenPlayer] Native platform - video handled by VideoView');
+      if (videoSource && videoPlayer) {
+        console.log('[FullScreenPlayer] Loading video...');
+        videoPlayer.replace(videoSource as any);
+        videoPlayer.play();
+        console.log('[FullScreenPlayer] Video loaded successfully');
       }
-      
-      videoPlayer.replace(currentMedia.videoPath);
-      videoPlayer.play();
-      console.log('[FullScreenPlayer] Video loaded successfully');
     } catch (error) {
       console.error('[FullScreenPlayer] Error loading media:', error);
     }
@@ -179,8 +189,9 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
 
   const handleNext = () => {
     if (!currentMedia) return;
-    const nextMedia = getNextMedia(currentMedia.id);
-    if (nextMedia) {
+    const currentIndex = soundsConfig.findIndex(s => s.id === currentMedia.id);
+    if (currentIndex >= 0 && currentIndex < soundsConfig.length - 1) {
+      const nextMedia = soundsConfig[currentIndex + 1];
       console.log('[FullScreenPlayer] Next media:', nextMedia.id);
       setCurrentMedia(nextMedia);
     }
@@ -188,8 +199,9 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
 
   const handlePrevious = () => {
     if (!currentMedia) return;
-    const prevMedia = getPreviousMedia(currentMedia.id);
-    if (prevMedia) {
+    const currentIndex = soundsConfig.findIndex(s => s.id === currentMedia.id);
+    if (currentIndex > 0) {
+      const prevMedia = soundsConfig[currentIndex - 1];
       console.log('[FullScreenPlayer] Previous media:', prevMedia.id);
       setCurrentMedia(prevMedia);
     }
@@ -211,26 +223,28 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     >
       <StatusBar hidden />
       
-      {Platform.OS === 'web' ? (
+      {Platform.OS === 'web' && videoSource && typeof videoSource === 'object' && 'uri' in videoSource ? (
         <video
           style={{
             width: width,
             height: height,
             objectFit: 'cover',
           }}
-          src={currentMedia.videoPath?.uri || currentMedia.videoPath}
+          src={videoSource.uri}
           autoPlay
           loop
           muted
           playsInline
         />
-      ) : (
+      ) : videoSource ? (
         <VideoView
           style={styles.video}
           player={videoPlayer}
           nativeControls={false}
           contentFit="cover"
         />
+      ) : (
+        <View style={{ width, height, backgroundColor: '#0b0b0f' }} />
       )}
 
       <Animated.View 
@@ -244,7 +258,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
           <View style={styles.headerContent}>
             <View>
               <Text style={styles.title}>{currentMedia.title}</Text>
-              <Text style={styles.description}>{currentMedia.description}</Text>
+              <Text style={styles.description}>{currentMedia.description || ''}</Text>
             </View>
             <TouchableOpacity
               style={styles.closeButton}

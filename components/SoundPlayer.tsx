@@ -49,7 +49,7 @@ export function SoundPlayer({ sound: initialSound, onClose }: Props) {
   });
 
   const currentIndex = useMemo(() => {
-    const i = sounds.findIndex((s) => s.title === current.title);
+    const i = sounds.findIndex((s) => s.id === current.id);
     return i >= 0 ? i : 0;
   }, [current]);
 
@@ -161,13 +161,21 @@ export function SoundPlayer({ sound: initialSound, onClose }: Props) {
   const goNext = useCallback(() => {
     showControls();
     if (!hasNext) return;
-    setCurrent(sounds[currentIndex + 1]);
+    const nextSound = sounds[currentIndex + 1];
+    if (nextSound) {
+      console.log('[SoundPlayer] Next sound:', nextSound.id);
+      setCurrent(nextSound);
+    }
   }, [currentIndex, hasNext, showControls]);
 
   const goPrev = useCallback(() => {
     showControls();
     if (!hasPrev) return;
-    setCurrent(sounds[currentIndex - 1]);
+    const prevSound = sounds[currentIndex - 1];
+    if (prevSound) {
+      console.log('[SoundPlayer] Previous sound:', prevSound.id);
+      setCurrent(prevSound);
+    }
   }, [currentIndex, hasPrev, showControls]);
 
   const onScreenPress = useCallback(() => {

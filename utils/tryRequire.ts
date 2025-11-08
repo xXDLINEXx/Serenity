@@ -1,85 +1,50 @@
-import { Platform } from 'react-native';
-
-const CDN_BASE = 'https://cdn.jsdelivr.net/gh/xXDLINEXx/serenity/media';
-
 export function tryRequire(localPath: string): any {
-  if (Platform.OS === 'web') {
-    const fileName = localPath.replace('../media/', '');
-    return { uri: `${CDN_BASE}/${fileName}` };
-  }
-
   try {
     if (localPath.includes('/audio/')) {
       const filename = localPath.split('/audio/')[1].replace('.mp3', '');
       switch (filename) {
-        case 'ocean':
-        case 'vague-de-locean':
-          return require('../media/audio/ocean.mp3');
-        case 'rain':
         case 'pluie-douce':
-          return require('../media/audio/rain.mp3');
-        case 'firecamp':
+          return require('../media/audio/pluie-douce.mp3');
+        case 'vague-de-locean':
+          return require('../media/audio/vague-de-locean.mp3');
         case 'feu-de-camp':
-          return require('../media/audio/firecamp.mp3');
-        case 'forest':
+          return require('../media/audio/feu-de-camp.mp3');
         case 'foret-paisible':
-          return require('../media/audio/forest.mp3');
-        case 'lake':
-        case 'riviere-calme':
-          return require('../media/audio/lake.mp3');
-        case 'wind':
+          return require('../media/audio/foret-paisible.mp3');
         case 'vent-leger':
-          return require('../media/audio/wind.mp3');
-        case 'thunder':
+          return require('../media/audio/vent-leger.mp3');
         case 'orage-apaisant':
-          return require('../media/audio/thunder.mp3');
-        case 'stream':
-          return require('../media/audio/stream.mp3');
-        case 'night':
-          return require('../media/audio/night.mp3');
-        case 'meditation':
+          return require('../media/audio/orage-apaisant.mp3');
+        case 'riviere-calme':
+          return require('../media/audio/riviere-calme.mp3');
         case 'bruit-blanc':
-          return require('../media/audio/meditation.mp3');
+          return require('../media/audio/bruit-blanc.mp3');
         default:
-          const fileName = localPath.replace('../media/', '');
-          return { uri: `${CDN_BASE}/${fileName}` };
+          throw new Error(`Audio file not found: ${filename}`);
       }
     } else if (localPath.includes('/video/')) {
       const filename = localPath.split('/video/')[1].replace('.mp4', '');
       switch (filename) {
-        case 'ocean':
-        case 'vague-de-locean':
-          return require('../media/video/ocean.mp4');
-        case 'rain':
         case 'pluie-douce':
-          return require('../media/video/rain.mp4');
-        case 'firecamp':
+          return require('../media/video/pluie-douce.mp4');
+        case 'vague-de-locean':
+          return require('../media/video/vague-de-locean.mp4');
         case 'feu-de-camp':
-          return require('../media/video/firecamp.mp4');
-        case 'forest':
+          return require('../media/video/feu-de-camp.mp4');
         case 'foret-paisible':
-          return require('../media/video/forest.mp4');
-        case 'lake':
-        case 'riviere-calme':
-          return require('../media/video/lake.mp4');
-        case 'wind':
+          return require('../media/video/foret-paisible.mp4');
         case 'vent-leger':
-          return require('../media/video/wind.mp4');
-        case 'thunder':
+          return require('../media/video/vent-leger.mp4');
         case 'orage-apaisant':
-          return require('../media/video/thunder.mp4');
-        case 'stream':
-          return require('../media/video/stream.mp4');
-        case 'night':
-          return require('../media/video/night.mp4');
-        case 'meditation':
+          return require('../media/video/orage-apaisant.mp4');
+        case 'riviere-calme':
+          return require('../media/video/riviere-calme.mp4');
         case 'bruit-blanc':
-          return require('../media/video/meditation.mp4');
+          return require('../media/video/bruit-blanc.mp4');
         case 'frequence':
           return require('../media/video/frequence.mp4');
         default:
-          const fileName = localPath.replace('../media/', '');
-          return { uri: `${CDN_BASE}/${fileName}` };
+          throw new Error(`Video file not found: ${filename}`);
       }
     } else if (localPath.includes('/frequency/')) {
       const filename = localPath.split('/frequency/')[1].replace('.mp3', '');
@@ -105,16 +70,13 @@ export function tryRequire(localPath: string): any {
         case '2772hz':
           return require('../media/frequency/2772hz.mp3');
         default:
-          const fileName = localPath.replace('../media/', '');
-          return { uri: `${CDN_BASE}/${fileName}` };
+          throw new Error(`Frequency file not found: ${filename}`);
       }
     }
 
-    const fileName = localPath.replace('../media/', '');
-    return { uri: `${CDN_BASE}/${fileName}` };
-  } catch {
-    console.warn(`[tryRequire] Failed to require ${localPath}, falling back to CDN`);
-    const fileName = localPath.replace('../media/', '');
-    return { uri: `${CDN_BASE}/${fileName}` };
+    throw new Error(`Invalid path: ${localPath}`);
+  } catch (error) {
+    console.error(`[tryRequire] Error loading ${localPath}:`, error);
+    throw error;
   }
 }

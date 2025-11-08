@@ -9,7 +9,7 @@ interface SoundCardProps {
   description: string;
   thumbnail: string;
   gradient: string;
-  audioUrl: string;
+  audioUrl: string | number;
 }
 
 export function SoundCard({ id, title, description, thumbnail, gradient, audioUrl }: SoundCardProps) {

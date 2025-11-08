@@ -18,18 +18,7 @@ import { healingFrequencies } from '@/constants/frequencies';
 import { useAudio } from '@/contexts/AudioContext';
 import { Pause, Play, X } from 'lucide-react-native';
 
-const soundMapping: { [key: string]: string } = {
-  "lake": "Rivière calme",
-  "firecamp": "Feu de camp",
-  "rain": "Pluie douce",
-  "ocean": "Vague de l'océan",
-  "forest": "Forêt paisible",
-  "wind": "Vent léger",
-  "thunder": "Orage apaisant",
-  "stream": "Rivière calme",
-  "night": "Forêt paisible",
-  "meditation": "417 Hz",
-};
+
 
 const getFrequencyImage = (frequencyId: string): string => {
   const imageMapping: { [key: string]: string } = {
@@ -49,72 +38,58 @@ const getFrequencyImage = (frequencyId: string): string => {
 
 const sleepSounds = [
   {
-    id: "lake",
-    title: "Lac Paisible",
-    description: "Douces vagues et sons de l'eau",
-    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(200 60% 20%), hsl(220 50% 15%))",
-  },
-  {
-    id: "firecamp",
-    title: "Feu de Camp",
-    description: "Sons chaleureux du feu pour un sommeil profond",
-    thumbnail: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/vr26mlk4l6oqchaekmtwk",
-    gradient: "linear-gradient(135deg, hsl(20 60% 20%), hsl(10 50% 15%))",
-  },
-  {
-    id: "rain",
-    title: "Pluie Douce",
-    description: "Ambiance apaisante de la pluie",
+    id: "pluie-douce",
+    title: "Pluie douce",
+    description: "Pluie légère sur les feuilles",
     thumbnail: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80",
     gradient: "linear-gradient(135deg, hsl(210 40% 20%), hsl(230 35% 15%))",
   },
   {
-    id: "ocean",
-    title: "Vagues de l'Océan",
-    description: "Vagues rythmiques pour la relaxation",
+    id: "vague-de-locean",
+    title: "Vague de l'océan",
+    description: "Vagues rythmiques de l'océan",
     thumbnail: "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&q=80",
     gradient: "linear-gradient(135deg, hsl(195 60% 25%), hsl(210 50% 18%))",
   },
   {
-    id: "forest",
-    title: "Nuit en Forêt",
-    description: "Sons de la nature et grillons",
+    id: "feu-de-camp",
+    title: "Feu de camp",
+    description: "Crépitement chaleureux du feu",
+    thumbnail: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/vr26mlk4l6oqchaekmtwk",
+    gradient: "linear-gradient(135deg, hsl(20 60% 20%), hsl(10 50% 15%))",
+  },
+  {
+    id: "foret-paisible",
+    title: "Forêt paisible",
+    description: "Oiseaux et nature de la forêt",
     thumbnail: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80",
     gradient: "linear-gradient(135deg, hsl(140 40% 20%), hsl(160 35% 15%))",
   },
   {
-    id: "wind",
-    title: "Vent Calme",
-    description: "Douce brise à travers les arbres",
+    id: "vent-leger",
+    title: "Vent léger",
+    description: "Son doux du vent dans les arbres",
     thumbnail: "https://images.unsplash.com/photo-1500964757637-c85e8a162699?w=400&q=80",
     gradient: "linear-gradient(135deg, hsl(180 30% 25%), hsl(200 30% 18%))",
   },
   {
-    id: "thunder",
-    title: "Tonnerre Lointain",
-    description: "Douce ambiance d'orage",
+    id: "orage-apaisant",
+    title: "Orage apaisant",
+    description: "Tonnerre lointain et pluie",
     thumbnail: "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&q=80",
     gradient: "linear-gradient(135deg, hsl(240 30% 20%), hsl(250 35% 15%))",
   },
   {
-    id: "stream",
-    title: "Ruisseau de Montagne",
-    description: "Sons d'eau qui coule",
-    thumbnail: "https://images.unsplash.com/photo-1520869562399-e772f042f422?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(190 50% 25%), hsl(210 45% 18%))",
+    id: "riviere-calme",
+    title: "Rivière calme",
+    description: "Écoulement paisible d'une rivière",
+    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
+    gradient: "linear-gradient(135deg, hsl(200 60% 20%), hsl(220 50% 15%))",
   },
   {
-    id: "night",
-    title: "Ambiance Nocturne",
-    description: "Sons paisibles de la nuit",
-    thumbnail: "https://images.unsplash.com/photo-1532693322450-2cb5c511067d?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(250 40% 18%), hsl(260 35% 12%))",
-  },
-  {
-    id: "meditation",
-    title: "Cloches de Méditation",
-    description: "Tons de cloche apaisants",
+    id: "bruit-blanc",
+    title: "Bruit blanc",
+    description: "Bruit constant et uniforme",
     thumbnail: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80",
     gradient: "linear-gradient(135deg, hsl(280 45% 22%), hsl(270 40% 16%))",
   },
@@ -128,11 +103,13 @@ export default function HomeScreen() {
   const { isPlaying, currentTitle, pauseSound, stopSound, playSound } = useAudio();
   const [activeSection, setActiveSection] = useState<Section>('sounds');
 
-  const getAudioUrlForSound = (soundId: string): string => {
-    const mappedTitle = soundMapping[soundId];
-    const soundConfig = soundsConfig.find((s) => s.title === mappedTitle);
+  const getAudioUrlForSound = (soundId: string): string | number => {
+    const soundConfig = soundsConfig.find((s) => s.id === soundId);
     const audio = soundConfig?.audio;
-    return typeof audio === 'string' ? audio : '';
+    if (typeof audio === 'string' || typeof audio === 'number') {
+      return audio;
+    }
+    return '';
   };
 
   React.useEffect(() => {
@@ -206,7 +183,14 @@ export default function HomeScreen() {
           <View style={styles.grid}>
             {sleepSounds.map((sound) => (
               <View key={sound.id} style={styles.gridItem}>
-                <SoundCard {...sound} audioUrl={getAudioUrlForSound(sound.id)} />
+                <SoundCard
+                  id={sound.id}
+                  title={sound.title}
+                  description={sound.description}
+                  thumbnail={sound.thumbnail}
+                  gradient={sound.gradient}
+                  audioUrl={getAudioUrlForSound(sound.id)}
+                />
               </View>
             ))}
           </View>
@@ -253,7 +237,7 @@ export default function HomeScreen() {
                       
                       if (currentSound && typeof currentSound.audio === 'string') {
                         await playSound(currentSound.audio, currentSound.title);
-                      } else if (currentFreq && currentFreq.audioUrl) {
+                      } else if (currentFreq && typeof currentFreq.audioUrl === 'string') {
                         await playSound(currentFreq.audioUrl, currentFreq.title);
                       }
                     }

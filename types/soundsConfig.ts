@@ -1,4 +1,5 @@
 export interface SoundConfig {
+  id: string;
   title: string;
   type: string;
   audio?: string | number | null;
