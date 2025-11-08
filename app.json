@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "sonsrelaxantsapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -17,10 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "app.rork.sons-relaxants-pour-dormir",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ],
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
+        "UIBackgroundModes": ["audio"],
+        "NSMicrophoneUsageDescription": "Cette application nécessite l'accès au microphone pour certaines fonctionnalités audio."
       }
     },
     "android": {
@@ -30,8 +28,6 @@
       },
       "package": "app.rork.sons_relaxants_pour_dormir",
       "permissions": [
-        "RECORD_AUDIO",
-        "WRITE_SETTINGS",
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ]
@@ -49,7 +45,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+          "microphonePermission": "L'application a besoin de l'accès au micro pour lire et contrôler certains sons."
         }
       ],
       [
