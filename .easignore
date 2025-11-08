@@ -8,11 +8,6 @@ ios/build
 .expo-shared/
 node_modules/
 
-# Ignore media files from upload (APK will include them locally)
-media/audio/*.mp3
-media/video/*.mp4
-media/frequency/*.mp3
-
 # IDE stuff
 .DS_Store
 .vscode/
