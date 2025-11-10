@@ -1,82 +1,89 @@
-export function tryRequire(localPath: string): any {
-  try {
-    if (localPath.includes('/audio/')) {
-      const filename = localPath.split('/audio/')[1].replace('.mp3', '');
-      switch (filename) {
-        case 'pluie-douce':
-          return require('../media/audio/pluie-douce.mp3');
-        case 'vague-de-locean':
-          return require('../media/audio/vague-de-locean.mp3');
-        case 'feu-de-camp':
-          return require('../media/audio/feu-de-camp.mp3');
-        case 'foret-paisible':
-          return require('../media/audio/foret-paisible.mp3');
-        case 'vent-leger':
-          return require('../media/audio/vent-leger.mp3');
-        case 'orage-apaisant':
-          return require('../media/audio/orage-apaisant.mp3');
-        case 'riviere-calme':
-          return require('../media/audio/riviere-calme.mp3');
-        case 'bruit-blanc':
-          return require('../media/audio/bruit-blanc.mp3');
-        default:
-          throw new Error(`Audio file not found: ${filename}`);
-      }
-    } else if (localPath.includes('/video/')) {
-      const filename = localPath.split('/video/')[1].replace('.mp4', '');
-      switch (filename) {
-        case 'pluie-douce':
-          return require('../media/video/pluie-douce.mp4');
-        case 'vague-de-locean':
-          return require('../media/video/vague-de-locean.mp4');
-        case 'feu-de-camp':
-          return require('../media/video/feu-de-camp.mp4');
-        case 'foret-paisible':
-          return require('../media/video/foret-paisible.mp4');
-        case 'vent-leger':
-          return require('../media/video/vent-leger.mp4');
-        case 'orage-apaisant':
-          return require('../media/video/orage-apaisant.mp4');
-        case 'riviere-calme':
-          return require('../media/video/riviere-calme.mp4');
-        case 'bruit-blanc':
-          return require('../media/video/bruit-blanc.mp4');
-        case 'frequence':
-          return require('../media/video/frequence.mp4');
-        default:
-          throw new Error(`Video file not found: ${filename}`);
-      }
-    } else if (localPath.includes('/frequency/')) {
-      const filename = localPath.split('/frequency/')[1].replace('.mp3', '');
-      switch (filename) {
-        case '4-7hz-with-417hz-639hz':
-          return require('../media/frequency/4-7hz-with-417hz-639hz.mp3');
-        case '8-to-12-hz':
-          return require('../media/frequency/8-to-12-hz.mp3');
-        case '10hz':
-          return require('../media/frequency/10hz.mp3');
-        case '33hz':
-          return require('../media/frequency/33hz.mp3');
-        case '66hz':
-          return require('../media/frequency/66hz.mp3');
-        case '396-hz-417-hz-639hz':
-          return require('../media/frequency/396-hz-417-hz-639hz.mp3');
-        case '417hz':
-          return require('../media/frequency/417hz.mp3');
-        case '852hz':
-          return require('../media/frequency/852hz.mp3');
-        case '1441hz':
-          return require('../media/frequency/1441hz.mp3');
-        case '2772hz':
-          return require('../media/frequency/2772hz.mp3');
-        default:
-          throw new Error(`Frequency file not found: ${filename}`);
-      }
-    }
+// utils/tryRequire.ts
+// Synchronisé avec soundsConfig.ts
+// Gère automatiquement les chemins audio et vidéo pour SoundPlayer et FullscreenPlayer
 
-    throw new Error(`Invalid path: ${localPath}`);
-  } catch (error) {
-    console.error(`[tryRequire] Error loading ${localPath}:`, error);
-    throw error;
+export function getAudioSource(id: string) {
+  switch (id) {
+    case "pluie_douce":
+      return require("../media/audio/pluie_douce.mp3");
+    case "vent_foret":
+      return require("../media/audio/vent_foret.mp3");
+    case "vagues_mer":
+      return require("../media/audio/vagues_mer.mp3");
+    case "feu_crepitant":
+      return require("../media/audio/feu_crepitant.mp3");
+    case "rivière_calme":
+      return require("../media/audio/riviere_calme.mp3");
+    case "nuit_ete":
+      return require("../media/audio/nuit_ete.mp3");
+    case "chant_oiseaux":
+      return require("../media/audio/chant_oiseaux.mp3");
+    case "orage_lointain":
+      return require("../media/audio/orage_lointain.mp3");
+    case "vent_montagne":
+      return require("../media/audio/vent_montagne.mp3");
+    case "battement_coeur":
+      return require("../media/audio/battement_coeur.mp3");
+    case "frequence_432hz":
+      return require("../media/frequency/432hz.mp3");
+    case "frequence_528hz":
+      return require("../media/frequency/528hz.mp3");
+    case "frequence_639hz":
+      return require("../media/frequency/639hz.mp3");
+    case "frequence_741hz":
+      return require("../media/frequency/741hz.mp3");
+    case "frequence_852hz":
+      return require("../media/frequency/852hz.mp3");
+    case "bruit_blanc":
+      return require("../media/audio/bruit_blanc.mp3");
+    case "bruit_rose":
+      return require("../media/audio/bruit_rose.mp3");
+    case "bruit_marron":
+      return require("../media/audio/bruit_marron.mp3");
+    default:
+      throw new Error(`Audio file not found: ${id}`);
+  }
+}
+
+export function getVideoSource(id: string) {
+  switch (id) {
+    case "pluie_douce":
+      return require("../media/video/pluie_douce.mp4");
+    case "vent_foret":
+      return require("../media/video/vent_foret.mp4");
+    case "vagues_mer":
+      return require("../media/video/vagues_mer.mp4");
+    case "feu_crepitant":
+      return require("../media/video/feu_crepitant.mp4");
+    case "rivière_calme":
+      return require("../media/video/riviere_calme.mp4");
+    case "nuit_ete":
+      return require("../media/video/nuit_ete.mp4");
+    case "chant_oiseaux":
+      return require("../media/video/chant_oiseaux.mp4");
+    case "orage_lointain":
+      return require("../media/video/orage_lointain.mp4");
+    case "vent_montagne":
+      return require("../media/video/vent_montagne.mp4");
+    case "battement_coeur":
+      return require("../media/video/battement_coeur.mp4");
+    case "frequence_432hz":
+      return require("../media/video/frequence_432hz.mp4");
+    case "frequence_528hz":
+      return require("../media/video/frequence_528hz.mp4");
+    case "frequence_639hz":
+      return require("../media/video/frequence_639hz.mp4");
+    case "frequence_741hz":
+      return require("../media/video/frequence_741hz.mp4");
+    case "frequence_852hz":
+      return require("../media/video/frequence_852hz.mp4");
+    case "bruit_blanc":
+      return require("../media/video/bruit_blanc.mp4");
+    case "bruit_rose":
+      return require("../media/video/bruit_rose.mp4");
+    case "bruit_marron":
+      return require("../media/video/bruit_marron.mp4");
+    default:
+      throw new Error(`Video file not found: ${id}`);
   }
 }
