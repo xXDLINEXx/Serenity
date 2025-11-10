@@ -12,20 +12,38 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Link } from "expo-router";
 import { sleepSounds } from "../constants/sleepSounds";
 import { healingFrequencies } from "../constants/frequencies";
+import * as Icons from "lucide-react-native"; // 👈 Ajout essentiel
 
 const { width } = Dimensions.get("window");
 
+// 🔧 Sécurise l’accès à l’icône
+function SafeIcon({ icon, size = 40, color = "#fff" }) {
+  const LucideIcon = Icons[icon] || Icons.Music; // fallback si icône introuvable
+  return <LucideIcon size={size} color={color} />;
+}
+
 export default function IndexScreen() {
   const renderSoundCard = (item: any, route: string) => (
-    <Link href={{ pathname: route, params: { id: item.id, type: route === "/local-player" ? "frequency" : "sound" } }} asChild>
-      <TouchableOpacity style={[styles.card, { backgroundColor: item.colors[0] }]}>
-        <LinearGradient colors={item.colors} style={styles.gradient}>
+    <Link
+      href={{
+        pathname: route,
+        params: {
+          id: item.id,
+          type: route === "/local-player" ? "frequency" : "sound",
+        },
+      }}
+      asChild
+    >
+      <TouchableOpacity
+        style={[styles.card, { backgroundColor: item.colors?.[0] || "#444" }]}
+      >
+        <LinearGradient colors={item.colors || ["#555", "#333"]} style={styles.gradient}>
           <View style={styles.iconCircle}>
-            <item.icon size={40} color="#fff" />
+            <SafeIcon icon={item.iconName || "Music"} /> {/* 👈 protège contre undefined */}
           </View>
-          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.title}>{item.title || "Sans titre"}</Text>
           <Text style={styles.desc} numberOfLines={2}>
-            {item.description}
+            {item.description || ""}
           </Text>
         </LinearGradient>
       </TouchableOpacity>
