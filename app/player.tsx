@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,13 +18,6 @@ import {
   Pause,
   X,
   Clock,
-  CloudRain,
-  Waves,
-  Trees,
-  Wind,
-  Flame,
-  Radio,
-  Zap,
 } from 'lucide-react-native';
 import { useAudio } from '@/contexts/AudioContext';
 import { sleepSounds, SleepSound } from '@/constants/sleepSounds';
@@ -32,8 +25,6 @@ import { healingFrequencies, HealingFrequency } from '@/constants/frequencies';
 import { getAudioSource } from '../utils/tryRequire';
 
 const { width, height } = Dimensions.get('window');
-
-// [Ici le même visualConfig que tu as déjà, inchangé]
 
 export default function PlayerScreen() {
   const router = useRouter();
@@ -44,9 +35,10 @@ export default function PlayerScreen() {
   const soundId = params.id as string;
   const type = params.type as 'sound' | 'frequency';
 
-  const item: SleepSound | HealingFrequency | undefined = type === 'sound' 
-    ? sleepSounds.find(s => s.id === soundId)
-    : healingFrequencies.find(f => f.id === soundId);
+  const item: SleepSound | HealingFrequency | undefined =
+    type === 'sound'
+      ? sleepSounds.find((s) => s.id === soundId)
+      : healingFrequencies.find((f) => f.id === soundId);
 
   const config = visualConfig[soundId] || visualConfig.frequency;
 
@@ -57,18 +49,42 @@ export default function PlayerScreen() {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
     ]).start();
 
     const rotateLoop = Animated.loop(
-      Animated.timing(rotateAnim, { toValue: 1, duration: 20000, easing: Easing.linear, useNativeDriver: true })
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 20000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
     );
 
     const pulseLoop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.2, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
       ])
     );
 
@@ -88,15 +104,16 @@ export default function PlayerScreen() {
 
   const handlePlayPause = async () => {
     if (!item) return;
+
     let url = '';
 
-    if ('audioUrl' in item && item.audioUrl) {
-      try {
-        const source = getAudioSource(item.audioUrl);
-        url = source.default || source;
-      } catch {
-        url = item.audioUrl;  // fallback si pas trouvé
-      }
+    try {
+      // 🔥 Utilisation de l'id réel (pas l'URL directe)
+      const source = getAudioSource(item.id);
+      url = source.default || source;
+    } catch (err) {
+      console.warn(`[PlayerScreen] Fichier introuvable pour l'id: ${item.id}`, err);
+      url = ('audioUrl' in item && item.audioUrl) ? item.audioUrl : '';
     }
 
     const title = item.title || '';
@@ -108,7 +125,10 @@ export default function PlayerScreen() {
     }
   };
 
-  const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
 
   if (!item) {
     return (
@@ -123,18 +143,38 @@ export default function PlayerScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={config.colors as [string, string, ...string[]]} style={styles.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+      <LinearGradient
+        colors={config.colors as [string, string, ...string[]]}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
         <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-          <TouchableOpacity style={styles.backButton} onPress={handleBack} testID="back-button">
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleBack}
+            testID="back-button"
+          >
             <ArrowLeft size={28} color="#FFFFFF" strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Lecture en cours</Text>
           <View style={styles.placeholder} />
         </View>
 
-        <Animated.View style={[styles.visualContainer, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          <AnimatedBackground config={config} pulseAnim={pulseAnim} rotateAnim={rotate} />
-          <Animated.View style={[styles.iconCircle, { transform: [{ rotate }, { scale: pulseAnim }] }]}>
+        <Animated.View
+          style={[
+            styles.visualContainer,
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
+          ]}
+        >
+          <AnimatedBackground
+            config={config}
+            pulseAnim={pulseAnim}
+            rotateAnim={rotate}
+          />
+          <Animated.View
+            style={[styles.iconCircle, { transform: [{ rotate }, { scale: pulseAnim }] }]}
+          >
             <Icon size={80} color="#FFFFFF" strokeWidth={1.5} />
           </Animated.View>
         </Animated.View>
@@ -151,11 +191,23 @@ export default function PlayerScreen() {
 
         <View style={[styles.controls, { paddingBottom: insets.bottom + 24 }]}>
           <View style={styles.controlsRow}>
-            <TouchableOpacity style={styles.controlButton} onPress={handlePlayPause} testID="play-pause-button">
-              {audio.isPlaying ? <Pause size={48} color="#FFFFFF" fill="#FFFFFF" /> : <Play size={48} color="#FFFFFF" fill="#FFFFFF" />}
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={handlePlayPause}
+              testID="play-pause-button"
+            >
+              {audio.isPlaying ? (
+                <Pause size={48} color="#FFFFFF" fill="#FFFFFF" />
+              ) : (
+                <Play size={48} color="#FFFFFF" fill="#FFFFFF" />
+              )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.stopButton} onPress={handleBack} testID="stop-button">
+            <TouchableOpacity
+              style={styles.stopButton}
+              onPress={handleBack}
+              testID="stop-button"
+            >
               <X size={32} color="#FFFFFF" strokeWidth={2.5} />
               <Text style={styles.stopButtonText}>Stop</Text>
             </TouchableOpacity>
@@ -168,14 +220,32 @@ export default function PlayerScreen() {
             <Text style={styles.timerText}>{audio.timer} min</Text>
           </View>
         )}
-
       </LinearGradient>
     </View>
   );
 }
 
-// Implémente AnimatedBackground et styles ici ou dans un autre fichier, comme dans ta version actuelle
-
+// Styles (inchangés ou adaptés selon ta version)
 const styles = StyleSheet.create({
-  // Ta définition des styles, inchangée ou adaptée
+  container: { flex: 1, backgroundColor: '#000' },
+  gradient: { flex: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 },
+  backButton: { padding: 8 },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  placeholder: { width: 32 },
+  visualContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  iconCircle: { padding: 40, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.15)' },
+  infoContainer: { alignItems: 'center', paddingHorizontal: 20 },
+  title: { fontSize: 22, color: '#fff', fontWeight: 'bold', marginBottom: 4 },
+  description: { fontSize: 16, color: '#eee', textAlign: 'center', marginBottom: 10 },
+  frequencyBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  frequencyText: { color: '#fff', fontSize: 14 },
+  controls: { alignItems: 'center' },
+  controlsRow: { flexDirection: 'row', justifyContent: 'center', gap: 40 },
+  controlButton: { backgroundColor: 'rgba(255,255,255,0.2)', padding: 20, borderRadius: 60 },
+  stopButton: { alignItems: 'center', marginTop: 20 },
+  stopButtonText: { color: '#fff', marginTop: 6 },
+  timerIndicator: { position: 'absolute', bottom: 20, alignSelf: 'center', flexDirection: 'row', gap: 8, alignItems: 'center' },
+  timerText: { color: '#fff' },
+  errorText: { color: '#fff', fontSize: 16, textAlign: 'center', marginTop: 20 },
 });
