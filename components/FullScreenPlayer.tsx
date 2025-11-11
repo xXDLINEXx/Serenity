@@ -39,7 +39,11 @@ async function toSourceAsync(src: number | string | { uri: string } | null | und
         const asset = Asset.fromModule(src);
         await asset.downloadAsync();
         console.log('[FullScreenPlayer] toSourceAsync: Web asset URI:', asset.uri);
-        return { uri: asset.uri || '' };
+        if (!asset.uri) {
+          console.error('[FullScreenPlayer] Asset has no URI');
+          return undefined;
+        }
+        return asset.uri;
       } catch (error) {
         console.error('[FullScreenPlayer] toSourceAsync: Failed to load asset on web:', error);
         return undefined;
@@ -50,12 +54,16 @@ async function toSourceAsync(src: number | string | { uri: string } | null | und
   
   if (typeof src === 'object' && 'uri' in src) {
     console.log('[FullScreenPlayer] toSourceAsync: Using URI from object:', src.uri);
-    return src.uri ? { uri: src.uri } : undefined;
+    if (!src.uri) {
+      console.error('[FullScreenPlayer] Object has empty URI');
+      return undefined;
+    }
+    return Platform.OS === 'web' ? src.uri : src;
   }
   
   if (typeof src === 'string') {
     console.log('[FullScreenPlayer] toSourceAsync: Using string URI:', src);
-    return { uri: src };
+    return src;
   }
   
   console.warn('[FullScreenPlayer] toSourceAsync: Unknown source type:', typeof src, src);
@@ -214,13 +222,18 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       console.log('[FullScreenPlayer] Loading video...');
       const videoSourceResolved = await toSourceAsync(currentMedia.video);
       console.log('[FullScreenPlayer] Video source after toSourceAsync:', videoSourceResolved);
+      console.log('[FullScreenPlayer] Video source type:', typeof videoSourceResolved);
       
       if (videoSourceResolved) {
         console.log('[FullScreenPlayer] Setting video source...');
         setVideoSource(videoSourceResolved);
-        if (videoPlayer) {
-          videoPlayer.replace(videoSourceResolved as any);
-          videoPlayer.play();
+        if (videoPlayer && Platform.OS !== 'web') {
+          try {
+            videoPlayer.replace(videoSourceResolved as any);
+            videoPlayer.play();
+          } catch (videoError) {
+            console.error('[FullScreenPlayer] Error replacing video:', videoError);
+          }
         }
         console.log('[FullScreenPlayer] Video loaded successfully');
       } else {
@@ -282,7 +295,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         <View style={{ width, height, backgroundColor: '#0b0b0f', alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#FFFFFF', fontSize: 16 }}>Chargement...</Text>
         </View>
-      ) : Platform.OS === 'web' && videoSource && typeof videoSource === 'object' && 'uri' in videoSource ? (
+      ) : Platform.OS === 'web' && videoSource ? (
         <video
           key={currentMedia.id}
           style={{
@@ -290,14 +303,25 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
             height: height,
             objectFit: 'cover',
           }}
-          src={videoSource.uri}
+          src={typeof videoSource === 'string' ? videoSource : (typeof videoSource === 'object' && 'uri' in videoSource ? videoSource.uri : '')}
           autoPlay
           loop
           muted
           playsInline
           onError={(e) => {
-            console.error('[FullScreenPlayer] Video error:', e);
-            console.error('[FullScreenPlayer] Video src:', videoSource.uri);
+            const src = typeof videoSource === 'string' ? videoSource : (typeof videoSource === 'object' && 'uri' in videoSource ? videoSource.uri : 'unknown');
+            console.error('[FullScreenPlayer] Video error event:', e);
+            console.error('[FullScreenPlayer] Video src:', src);
+            console.error('[FullScreenPlayer] Video source type:', typeof videoSource);
+            console.error('[FullScreenPlayer] Video source value:', JSON.stringify(videoSource));
+            console.error('[FullScreenPlayer] Current media ID:', currentMedia.id);
+            console.error('[FullScreenPlayer] Original video value:', currentMedia.video);
+          }}
+          onLoadStart={() => {
+            console.log('[FullScreenPlayer] Video load started');
+          }}
+          onCanPlay={() => {
+            console.log('[FullScreenPlayer] Video can play');
           }}
         />
       ) : videoSource ? (
