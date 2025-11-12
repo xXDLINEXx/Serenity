@@ -74,10 +74,10 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     soundsConfig.find(m => m.id === initialMediaId)
   );
   const [showControls, setShowControls] = useState<boolean>(true);
-  const [videoSource, setVideoSource] = useState<any>(undefined);
+  const [videoSource, setVideoSource] = useState<{ uri: string } | undefined>(undefined);
   const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(true);
   
-  const videoPlayer = useVideoPlayer(videoSource, player => {
+  const videoPlayer = useVideoPlayer(videoSource || { uri: '' }, player => {
     if (videoSource) {
       player.loop = true;
       player.muted = true;
