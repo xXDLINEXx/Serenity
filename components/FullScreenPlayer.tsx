@@ -76,7 +76,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   );
   const [showControls, setShowControls] = useState<boolean>(true);
   const [videoSource, setVideoSource] = useState<VideoSource | undefined>(undefined);
-  const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(true);
+  const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(false);
   const videoPlayer = useVideoPlayer(videoSource, player => {
     if (videoSource) {
       player.loop = true;
@@ -309,11 +309,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     >
       <StatusBar hidden translucent backgroundColor="transparent" />
       
-      {isLoadingVideo ? (
-        <View style={{ width, height, backgroundColor: '#0b0b0f', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 16 }}>Chargement...</Text>
-        </View>
-      ) : Platform.OS === 'web' && videoSource ? (
+      {Platform.OS === 'web' && videoSource ? (
         <video
           key={currentMedia.id}
           style={{
@@ -347,6 +343,14 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         />
       ) : (
         <View style={{ width, height, backgroundColor: '#0b0b0f' }} />
+      )}
+
+      {isLoadingVideo && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Chargement...</Text>
+          </View>
+        </View>
       )}
 
       <Animated.View 
@@ -494,6 +498,26 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     color: '#FFFFFF',
+    fontWeight: '600' as const,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  loadingContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: 32,
+    paddingVertical: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 18,
     fontWeight: '600' as const,
   },
 });
