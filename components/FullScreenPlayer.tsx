@@ -86,9 +86,11 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   });
   
   const soundRef = useRef<Audio.Sound | null>(null);
+  const videoPlayerRef = useRef(videoPlayer);
   const fadeAnimRef = useRef(new Animated.Value(1));
   const fadeAnim = fadeAnimRef.current;
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isCleaningUpRef = useRef(false);
 
   useEffect(() => {
     loadMedia();
@@ -115,6 +117,10 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       };
     }, [])
   );
+
+  useEffect(() => {
+    videoPlayerRef.current = videoPlayer;
+  }, [videoPlayer]);
 
   useEffect(() => {
     if (currentMedia) {
@@ -156,16 +162,13 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   };
 
   const cleanup = async () => {
-    console.log('[FullScreenPlayer] Cleanup called');
-    
-    try {
-      if (videoPlayer) {
-        console.log('[FullScreenPlayer] Pausing and stopping video');
-        videoPlayer.pause();
-      }
-    } catch (error) {
-      console.error('[FullScreenPlayer] Error stopping video:', error);
+    if (isCleaningUpRef.current) {
+      console.log('[FullScreenPlayer] Cleanup already in progress, skipping');
+      return;
     }
+    
+    isCleaningUpRef.current = true;
+    console.log('[FullScreenPlayer] Cleanup called');
     
     if (soundRef.current) {
       try {
@@ -184,6 +187,8 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       clearTimeout(controlsTimeoutRef.current);
       controlsTimeoutRef.current = null;
     }
+    
+    isCleaningUpRef.current = false;
   };
 
   const loadMedia = async () => {
