@@ -177,10 +177,21 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     if (soundRef.current) {
       try {
         console.log('[FullScreenPlayer] Stopping and unloading sound');
-        const soundToClean = soundRef.current;
+        const s = soundRef.current;
         soundRef.current = null;
-        await soundToClean.stopAsync();
-        await soundToClean.unloadAsync();
+
+        await s.setIsLoopingAsync(false).catch(() => {});
+        console.log('[FullScreenPlayer] Loop disabled');
+
+        await s.pauseAsync().catch(() => {});
+        console.log('[FullScreenPlayer] Sound paused');
+
+        await s.stopAsync().catch(() => {});
+        console.log('[FullScreenPlayer] Sound stopped');
+
+        await s.unloadAsync().catch(() => {});
+        console.log('[FullScreenPlayer] Sound unloaded');
+
         console.log('[FullScreenPlayer] Sound cleaned up successfully');
       } catch (error) {
         console.error('[FullScreenPlayer] Error cleaning up sound:', error);
