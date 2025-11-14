@@ -1,4 +1,9 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   View,
   Text,
@@ -10,10 +15,9 @@ import {
   Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { VideoView, useVideoPlayer } from "expo-video";
-import { useEvent } from "expo";
-import { Asset } from "expo-asset";
 import { useRouter, useFocusEffect } from "expo-router";
+import { VideoView, useVideoPlayer } from "expo-video";
+import { Asset } from "expo-asset";
 import Slider from "@react-native-community/slider";
 import { X, SkipBack, SkipForward, Play, Pause } from "lucide-react-native";
 
@@ -22,10 +26,27 @@ import { useAudio } from "@/contexts/AudioContext";
 
 const { width } = Dimensions.get("window");
 
-async function toVideoSource(src: any): Promise<{ uri: string } | undefined> {
+type FullScreenPlayerProps = {
+  initialMediaId: string;
+};
+
+type MediaItem = {
+  id: string;
+  title: string;
+  audio?: string | number | { uri: string };
+  frequency?: string;
+  sound?: string;
+  video?: string | number | { uri: string };
+};
+
+async function toVideoSource(
+  src: string | number | { uri: string } | undefined
+): Promise<{ uri: string } | undefined> {
   if (!src) return undefined;
 
-  if (typeof src === "string") return { uri: src };
+  if (typeof src === "string") {
+    return { uri: src };
+  }
 
   if (typeof src === "number") {
     const asset = Asset.fromModule(src);
@@ -33,7 +54,7 @@ async function toVideoSource(src: any): Promise<{ uri: string } | undefined> {
     return { uri: asset.localUri ?? asset.uri };
   }
 
-  if (typeof src === "object" && src.uri) {
+  if (typeof src === "object" && typeof src.uri === "string") {
     return { uri: src.uri };
   }
 
@@ -42,17 +63,18 @@ async function toVideoSource(src: any): Promise<{ uri: string } | undefined> {
 
 export default function FullScreenPlayer({
   initialMediaId,
-}: {
-  initialMediaId: string;
-}) {
+}: FullScreenPlayerProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [currentMedia, setCurrentMedia] = useState(() => {
-    const list = soundsConfig as any[];
+  const [currentMedia, setCurrentMedia] = useState<MediaItem | null>(() => {
+    const list = soundsConfig as MediaItem[];
+
     const byId = list.find((m) => m.id === initialMediaId);
     if (byId) return byId;
-    return list.find((m) => m.title === initialMediaId) ?? null;
+
+    const byTitle = list.find((m) => m.title === initialMediaId);
+    return byTitle ?? null;
   });
 
   const [videoSource, setVideoSource] = useState<{ uri: string } | undefined>();
@@ -61,16 +83,15 @@ export default function FullScreenPlayer({
   const [isSeeking, setIsSeeking] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const controlsTimeoutRef = useRef<any>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const videoPlayer = useVideoPlayer(videoSource, (player) => {
     if (videoSource) {
       player.loop = true;
-      player.muted = true;
+      player.muted = true; // 🔇 la vidéo ne joue PAS de son
       player.play();
     }
   });
-
   const videoPlayerRef = useRef(videoPlayer);
 
   const {
@@ -84,14 +105,14 @@ export default function FullScreenPlayer({
     currentTitle,
   } = useAudio();
 
-  // Sync slider while not dragging
+  // --- Sync du slider avec l’audio ---
   useEffect(() => {
     if (!isSeeking && duration > 0) {
       setSliderValue(position / duration);
     }
   }, [duration, position, isSeeking]);
 
-  // Hide/show controls
+  // --- Auto-hide des contrôles ---
   useEffect(() => {
     if (showControls) {
       fadeAnim.setValue(1);
@@ -106,7 +127,7 @@ export default function FullScreenPlayer({
     } else {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 250,
+        duration: 200,
         useNativeDriver: true,
       }).start();
     }
@@ -116,52 +137,63 @@ export default function FullScreenPlayer({
         clearTimeout(controlsTimeoutRef.current);
       }
     };
-  }, [showControls]);
+  }, [showControls, fadeAnim]);
 
+  // --- Nettoyage global (son + vidéo) ---
   const cleanup = useCallback(async () => {
     try {
       await stopSound();
     } catch (e) {
-      console.log("Stop error:", e);
+      console.log("[FullScreenPlayer] stopSound error:", e);
     }
+
     try {
       videoPlayerRef.current?.pause();
     } catch (e) {
-      console.log("Video stop error:", e);
+      console.log("[FullScreenPlayer] video pause error:", e);
     }
+
     setVideoSource(undefined);
   }, [stopSound]);
 
+  // --- Chargement du média courant (audio + vidéo) ---
   const loadMedia = useCallback(async () => {
     if (!currentMedia) return;
 
     await stopSound();
 
     try {
-      const audioUrl =
-        currentMedia.audio ?? currentMedia.frequency ?? currentMedia.sound;
+      const rawAudio =
+        (currentMedia.audio as string | undefined) ??
+        (currentMedia.frequency as string | undefined) ??
+        (currentMedia.sound as string | undefined);
 
-      if (typeof audioUrl === "string" && audioUrl.length > 0) {
-        await playSound(audioUrl, currentMedia.title ?? "");
+      if (rawAudio && rawAudio.length > 0) {
+        await playSound(rawAudio, currentMedia.title ?? "");
       }
 
-      const videoSrc = await toVideoSource(currentMedia.video);
-      setVideoSource(videoSrc);
+      const vid = await toVideoSource(currentMedia.video);
+      setVideoSource(vid);
 
       setShowControls(true);
     } catch (e) {
-      console.log("LOAD MEDIA ERROR:", e);
+      console.log("[FullScreenPlayer] loadMedia error:", e);
     }
   }, [currentMedia, playSound, stopSound]);
 
+  // 1er load
   useEffect(() => {
     loadMedia();
   }, [loadMedia]);
 
+  // Quand on change de média (next/prev)
   useEffect(() => {
-    if (currentMedia) loadMedia();
-  }, [currentMedia]);
+    if (currentMedia) {
+      loadMedia();
+    }
+  }, [currentMedia, loadMedia]);
 
+  // Cleanup quand on quitte l’écran (back / navigation)
   useFocusEffect(
     useCallback(() => {
       return () => {
@@ -188,11 +220,13 @@ export default function FullScreenPlayer({
     if (isPlaying) {
       await pauseSound();
     } else {
-      const audioUrl =
-        currentMedia.audio ?? currentMedia.frequency ?? currentMedia.sound;
+      const rawAudio =
+        (currentMedia.audio as string | undefined) ??
+        (currentMedia.frequency as string | undefined) ??
+        (currentMedia.sound as string | undefined);
 
-      if (typeof audioUrl === "string" && audioUrl.length > 0) {
-        await playSound(audioUrl, currentMedia.title ?? "");
+      if (rawAudio && rawAudio.length > 0) {
+        await playSound(rawAudio, currentMedia.title ?? "");
       }
     }
 
@@ -205,18 +239,20 @@ export default function FullScreenPlayer({
   };
 
   const handleNext = () => {
-    const list = soundsConfig as any[];
-    const i = list.findIndex((s) => s.id === currentMedia.id);
-    if (i >= 0 && i < list.length - 1) {
-      setCurrentMedia(list[i + 1]);
+    const list = soundsConfig as MediaItem[];
+    if (!currentMedia) return;
+    const index = list.findIndex((s) => s.id === currentMedia.id);
+    if (index >= 0 && index < list.length - 1) {
+      setCurrentMedia(list[index + 1]);
     }
   };
 
   const handlePrevious = () => {
-    const list = soundsConfig as any[];
-    const i = list.findIndex((s) => s.id === currentMedia.id);
-    if (i > 0) {
-      setCurrentMedia(list[i - 1]);
+    const list = soundsConfig as MediaItem[];
+    if (!currentMedia) return;
+    const index = list.findIndex((s) => s.id === currentMedia.id);
+    if (index > 0) {
+      setCurrentMedia(list[index - 1]);
     }
   };
 
@@ -234,13 +270,13 @@ export default function FullScreenPlayer({
     try {
       await seek(newPosition);
     } catch (e) {
-      console.log("Seek error:", e);
+      console.log("[FullScreenPlayer] seek error:", e);
     }
 
     try {
       videoPlayerRef.current?.seekTo(newPosition / 1000);
     } catch (e) {
-      console.log("Video seek error:", e);
+      console.log("[FullScreenPlayer] videoSeek error:", e);
     }
   };
 
