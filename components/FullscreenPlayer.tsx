@@ -1,6 +1,4 @@
-// --- FullScreenPlayer.tsx (VERSION CORRIGÉE) ---
-
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -11,39 +9,41 @@ import {
   Animated,
   Dimensions,
   Pressable,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { VideoView, useVideoPlayer } from 'expo-video';
-import { Audio } from 'expo-av';
-import { useRouter, useFocusEffect } from 'expo-router';
-import * as NavigationBar from 'expo-navigation-bar';
-import * as SystemUI from 'expo-system-ui';
-import { X, SkipForward, SkipBack, Play, Pause } from 'lucide-react-native';
-import { soundsConfig } from '@/constants/soundsConfig';
-import { Asset } from 'expo-asset';
-import { useEvent } from 'expo';
-import Slider from '@react-native-community/slider';
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { VideoView, useVideoPlayer } from "expo-video";
+import { useEvent } from "expo";
+import { Audio } from "expo-av";
+import { useRouter, useFocusEffect } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
+import * as SystemUI from "expo-system-ui";
+import { X, SkipForward, SkipBack, Play, Pause } from "lucide-react-native";
+import { soundsConfig } from "@/constants/soundsConfig";
+import { Asset } from "expo-asset";
+import Slider from "@react-native-community/slider";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
+// Format mm:ss
 const formatTime = (seconds: number) => {
-  if (!seconds || Number.isNaN(seconds)) return '0:00';
+  if (!seconds || Number.isNaN(seconds)) return "0:00";
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 };
 
+// Converter
 async function toSourceAsync(src) {
   if (!src) return undefined;
 
-  if (typeof src === 'number') {
+  if (typeof src === "number") {
     const asset = Asset.fromModule(src);
     await asset.downloadAsync();
     return { uri: asset.uri };
   }
 
-  if (typeof src === 'string') return { uri: src };
-  if (typeof src === 'object' && src.uri) return src;
+  if (typeof src === "string") return { uri: src };
+  if (typeof src === "object" && src.uri) return src;
 
   return undefined;
 }
@@ -53,20 +53,21 @@ export function FullScreenPlayer({ initialMediaId }) {
   const insets = useSafeAreaInsets();
 
   const [currentMedia, setCurrentMedia] = useState(() =>
-    soundsConfig.find(m => m.id === initialMediaId)
+    soundsConfig.find((m) => m.id === initialMediaId)
   );
+
   const [showControls, setShowControls] = useState(true);
   const [videoSource, setVideoSource] = useState(undefined);
-  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
 
-  const soundRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const controlsTimeoutRef = useRef(null);
-  const isCleaningUpRef = useRef(false);
+  const soundRef = useRef(null);
+  const isCleaningRef = useRef(false);
 
-  const videoPlayer = useVideoPlayer(videoSource, player => {
+  // Video player
+  const videoPlayer = useVideoPlayer(videoSource, (player) => {
     if (videoSource) {
       player.loop = true;
       player.muted = true;
@@ -74,37 +75,40 @@ export function FullScreenPlayer({ initialMediaId }) {
       player.play();
     }
   });
+
   const videoPlayerRef = useRef(videoPlayer);
 
   const { isPlaying } = useEvent(videoPlayer, "playingChange", {
-    isPlaying: videoPlayer?.playing ?? false
+    isPlaying: videoPlayer?.playing ?? false,
   });
+
   const { currentTime = 0 } = useEvent(videoPlayer, "timeUpdate", {
-    currentTime: videoPlayer?.currentTime ?? 0
+    currentTime: videoPlayer?.currentTime ?? 0,
   });
 
   const duration = videoPlayer?.duration ?? 0;
 
-  // === Sync Slider ===
+  // Sync slider with video
   useEffect(() => {
     if (!isSeeking) setSliderValue(currentTime);
   }, [currentTime, isSeeking]);
 
-  // === Full Setup ===
+  // First load
   useEffect(() => {
     loadMedia();
 
-    if (Platform.OS === 'android') {
-      NavigationBar.setVisibilityAsync('hidden');
-      SystemUI.setBackgroundColorAsync('transparent');
+    if (Platform.OS === "android") {
+      NavigationBar.setVisibilityAsync("hidden");
+      SystemUI.setBackgroundColorAsync("transparent");
     }
 
     return () => {
-      if (Platform.OS === 'android')
-        NavigationBar.setVisibilityAsync('visible');
+      if (Platform.OS === "android")
+        NavigationBar.setVisibilityAsync("visible");
     };
   }, []);
 
+  // Cleanup when navigating away
   useFocusEffect(
     React.useCallback(() => {
       return () => {
@@ -121,7 +125,7 @@ export function FullScreenPlayer({ initialMediaId }) {
     if (currentMedia) loadMedia();
   }, [currentMedia?.id]);
 
-  // === Auto-hide Controls ===
+  // Auto-hide controls (4s)
   useEffect(() => {
     if (showControls) {
       fadeAnim.setValue(1);
@@ -136,7 +140,7 @@ export function FullScreenPlayer({ initialMediaId }) {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 300,
-        useNativeDriver: true
+        useNativeDriver: true,
       }).start();
     }
 
@@ -146,24 +150,34 @@ export function FullScreenPlayer({ initialMediaId }) {
     };
   }, [showControls]);
 
-  const handleScreenPress = () => setShowControls(prev => !prev);
+  const handleScreenPress = () => {
+    setShowControls((prev) => !prev);
+  };
 
   // ===========================================================
-  // 🔥 REAL FIX: CLEANUP AUDIO CORRECTLY + NO DOUBLE-PLAY
+  // 🔥 CLEANUP AUDIO & VIDEO (PERFECT)
   // ===========================================================
   const cleanup = async () => {
-    if (isCleaningUpRef.current) return;
-    isCleaningUpRef.current = true;
+    if (isCleaningRef.current) return;
+    isCleaningRef.current = true;
 
-    // STOP AUDIO
+    // Stop audio
     if (soundRef.current) {
       const s = soundRef.current;
       soundRef.current = null;
 
-      try { await s.setIsLoopingAsync(false); } catch (_) {}
-      try { await s.pauseAsync(); } catch (_) {}
-      try { await s.stopAsync(); } catch (_) {}
-      try { await s.unloadAsync(); } catch (_) {}
+      try {
+        await s.setIsLoopingAsync(false);
+      } catch (_) {}
+      try {
+        await s.pauseAsync();
+      } catch (_) {}
+      try {
+        await s.stopAsync();
+      } catch (_) {}
+      try {
+        await s.unloadAsync();
+      } catch (_) {}
 
       console.log("AUDIO CLEANED ✔");
     }
@@ -174,57 +188,59 @@ export function FullScreenPlayer({ initialMediaId }) {
     } catch (_) {}
 
     setVideoSource(undefined);
-    isCleaningUpRef.current = false;
+
+    isCleaningRef.current = false;
   };
 
   // ===========================================================
-  // 🔥 REAL FIX: SOUND MUST PLAY *ONCE* ONLY
+  // 🔥 LOAD MEDIA (audio OR frequency supported)
   // ===========================================================
   const loadMedia = async () => {
     await cleanup();
-    setIsLoadingVideo(true);
 
     try {
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+      });
 
-      // Load audio
-      const audioSource = await toSourceAsync(currentMedia.audio);
+      // Choose audio or frequency
+      const rawAudio = currentMedia.audio ?? currentMedia.frequency;
+      const audioSource = await toSourceAsync(rawAudio);
+
       const { sound } = await Audio.Sound.createAsync(audioSource, {
         isLooping: true,
         volume: 1.0,
-        shouldPlay: false  // IMPORTANT: NO AUTO-PLAY
+        shouldPlay: false,
       });
 
       soundRef.current = sound;
-      await sound.playAsync();    // ONLY ONE PLAY
+      await sound.playAsync();
 
-      // Video
       const videoAsset = await toSourceAsync(currentMedia.video);
       if (videoAsset) setVideoSource({ uri: videoAsset.uri });
 
-      setIsLoadingVideo(false);
       setShowControls(true);
-
     } catch (e) {
       console.error("LOAD ERROR:", e);
-      setIsLoadingVideo(false);
     }
   };
 
-  // === Buttons ===
-
+  // ===========================================================
+  // BUTTONS
+  // ===========================================================
   const handleStop = async () => {
     await cleanup();
     router.back();
   };
 
   const handleNext = () => {
-    const idx = soundsConfig.findIndex(s => s.id === currentMedia.id);
-    if (idx < soundsConfig.length - 1) setCurrentMedia(soundsConfig[idx + 1]);
+    const idx = soundsConfig.findIndex((s) => s.id === currentMedia.id);
+    if (idx < soundsConfig.length - 1)
+      setCurrentMedia(soundsConfig[idx + 1]);
   };
 
   const handlePrevious = () => {
-    const idx = soundsConfig.findIndex(s => s.id === currentMedia.id);
+    const idx = soundsConfig.findIndex((s) => s.id === currentMedia.id);
     if (idx > 0) setCurrentMedia(soundsConfig[idx - 1]);
   };
 
@@ -240,7 +256,7 @@ export function FullScreenPlayer({ initialMediaId }) {
     }
   };
 
-  const handleSeekComplete = async value => {
+  const handleSeekComplete = async (value) => {
     const position = value;
 
     if (videoPlayerRef.current)
@@ -253,7 +269,11 @@ export function FullScreenPlayer({ initialMediaId }) {
   };
 
   if (!currentMedia)
-    return <View><Text>Erreur</Text></View>;
+    return (
+      <View>
+        <Text>Erreur</Text>
+      </View>
+    );
 
   return (
     <View style={styles.container}>
@@ -274,12 +294,14 @@ export function FullScreenPlayer({ initialMediaId }) {
         style={[styles.overlay, { opacity: fadeAnim }]}
         pointerEvents={showControls ? "auto" : "none"}
       >
-        {/* Header */}
+        {/* HEADER */}
         <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
           <View style={styles.headerContent}>
             <View>
               <Text style={styles.title}>{currentMedia.title}</Text>
-              <Text style={styles.description}>{currentMedia.description}</Text>
+              <Text style={styles.description}>
+                {currentMedia.description}
+              </Text>
             </View>
 
             <TouchableOpacity style={styles.closeButton} onPress={handleStop}>
@@ -288,9 +310,9 @@ export function FullScreenPlayer({ initialMediaId }) {
           </View>
         </View>
 
-        {/* Controls */}
+        {/* CONTROLS */}
         <View style={[styles.controls, { paddingBottom: insets.bottom + 32 }]}>
-          {/* Slider */}
+          {/* SLIDER */}
           <View style={styles.progressContainer}>
             <Text style={styles.timeText}>{formatTime(sliderValue)}</Text>
 
@@ -303,20 +325,26 @@ export function FullScreenPlayer({ initialMediaId }) {
               maximumTrackTintColor="rgba(255,255,255,0.3)"
               thumbTintColor="#fff"
               onSlidingStart={() => setIsSeeking(true)}
-              onValueChange={v => setSliderValue(v)}
+              onValueChange={(v) => setSliderValue(v)}
               onSlidingComplete={handleSeekComplete}
             />
 
             <Text style={styles.timeText}>{formatTime(duration)}</Text>
           </View>
 
-          {/* Buttons */}
+          {/* BUTTONS */}
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.controlButton} onPress={handlePrevious}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={handlePrevious}
+            >
               <SkipBack size={32} color="#fff" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.controlButton} onPress={handlePlayPause}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={handlePlayPause}
+            >
               {isPlaying ? (
                 <Pause size={32} color="#fff" />
               ) : (
@@ -324,13 +352,19 @@ export function FullScreenPlayer({ initialMediaId }) {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.controlButton} onPress={handleNext}>
+            <TouchableOpacity
+              style={styles.controlButton}
+              onPress={handleNext}
+            >
               <SkipForward size={32} color="#fff" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.stopRow}>
-            <TouchableOpacity style={[styles.controlButton, styles.stopButton]} onPress={handleStop}>
+            <TouchableOpacity
+              style={[styles.controlButton, styles.stopButton]}
+              onPress={handleStop}
+            >
               <X size={40} color="#fff" />
               <Text style={styles.stopText}>STOP</Text>
             </TouchableOpacity>
@@ -342,51 +376,59 @@ export function FullScreenPlayer({ initialMediaId }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
+  container: { flex: 1, backgroundColor: "#000" },
   video: { width, height },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'space-between'
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "space-between",
   },
   header: { paddingHorizontal: 24 },
-  headerContent: { flexDirection: 'row', justifyContent: 'space-between' },
-  title: { fontSize: 28, color: '#fff', fontWeight: 'bold' },
-  description: { fontSize: 16, color: '#fff' },
+  headerContent: { flexDirection: "row", justifyContent: "space-between" },
+  title: { fontSize: 28, color: "#fff", fontWeight: "bold" },
+  description: { fontSize: 16, color: "#fff", opacity: 0.9 },
   closeButton: {
-    width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center'
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   controls: { paddingHorizontal: 24 },
   progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 24,
+    gap: 8,
   },
   slider: { flex: 1 },
-  timeText: { color: '#fff', width: 45, textAlign: 'center' },
+  timeText: { color: "#fff", width: 45, textAlign: "center" },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 32,
-    marginBottom: 20
+    marginBottom: 20,
   },
   controlButton: {
-    width: 72, height: 72,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 72,
+    height: 72,
     borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)'
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.3)",
   },
-  stopRow: { alignItems: 'center' },
+  stopRow: { alignItems: "center" },
   stopButton: {
-    width: 96, height: 96,
-    backgroundColor: 'rgba(239,68,68,0.4)',
+    width: 96,
+    height: 96,
     borderRadius: 48,
-    borderColor: 'rgba(239,68,68,0.6)',
-    justifyContent: 'center', alignItems: 'center'
+    backgroundColor: "rgba(239,68,68,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: "rgba(239,68,68,0.6)",
   },
-  stopText: { color: '#fff', fontWeight: 'bold', marginTop: 4 }
+  stopText: { color: "#fff", marginTop: 4, fontWeight: "bold" },
 });
