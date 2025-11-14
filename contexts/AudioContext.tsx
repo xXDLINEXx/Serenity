@@ -7,27 +7,39 @@ import React, {
 } from "react";
 import { Audio } from "expo-av";
 import { useNavigation } from "expo-router";
+import { Platform } from "react-native";
 
-interface AudioContextType {
-  sound: Audio.Sound | null;
+interface AudioContextValue {
   isPlaying: boolean;
+  currentTrack: string | null;
   currentTitle: string | null;
-  playSound: (uri: string, title: string) => Promise<void>;
+  duration: number;
+  position: number;
+  isLoading: boolean;
+  timer: number | null;
+  playSound: (url: string, title: string) => Promise<void>;
   pauseSound: () => Promise<void>;
   stopSound: () => Promise<void>;
+  seek: (positionMillis: number) => Promise<void>;
+  setTimer: (minutes: number | null) => void;
 }
 
-const AudioContext = createContext<AudioContextType | undefined>(undefined);
+const AudioContext = createContext<AudioContextValue | undefined>(undefined);
 
 export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState<string | null>(null);
   const [currentTitle, setCurrentTitle] = useState<string | null>(null);
+  const [duration, setDuration] = useState(0);
+  const [position, setPosition] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [timer, setTimer] = useState<number | null>(null);
 
   const navigation = useNavigation();
 
   /* ------------------------------------------------------
-     STOP SOUND - CLEANUP GLOBAL
+     STOP SOUND (DESTRUCTION TOTALE)
   ------------------------------------------------------ */
   const stopSound = useCallback(async () => {
     try {
@@ -41,11 +53,14 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
     setSound(null);
     setIsPlaying(false);
+    setCurrentTrack(null);
     setCurrentTitle(null);
+    setDuration(0);
+    setPosition(0);
   }, [sound]);
 
   /* ------------------------------------------------------
-     PAUSE SOUND
+     PAUSE
   ------------------------------------------------------ */
   const pauseSound = useCallback(async () => {
     if (!sound) return;
@@ -58,43 +73,66 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sound]);
 
   /* ------------------------------------------------------
-     PLAY SOUND - ALWAYS STOPS OLD SOUND
+     PLAY SOUND (UTILISE TOUJOURS LE MÊME PLAYER)
   ------------------------------------------------------ */
   const playSound = useCallback(
-    async (uri: string, title: string) => {
+    async (url: string, title: string) => {
       try {
-        if (!uri) return;
+        if (!url) return;
 
-        // Stop previous audio instance
+        setIsLoading(true);
         await stopSound();
 
-        const { sound: newSound } = await Audio.Sound.createAsync({
-          uri,
-        });
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: url },
+          { shouldPlay: true, volume: 1.0 },
+          (status) => {
+            if (!status.isLoaded) return;
+            if (!status.isPlaying) setIsPlaying(false);
+            else setIsPlaying(true);
+            setDuration(status.durationMillis ?? 0);
+            setPosition(status.positionMillis ?? 0);
+            if (status.didJustFinish) stopSound();
+          }
+        );
 
         setSound(newSound);
+        setCurrentTrack(url);
         setCurrentTitle(title);
-
-        await newSound.playAsync();
         setIsPlaying(true);
-
-        // Auto cleanup when sound finishes
-        newSound.setOnPlaybackStatusUpdate((status) => {
-          if (!status.isLoaded) return;
-          if (status.didJustFinish) {
-            stopSound();
-          }
-        });
       } catch (e) {
         console.log("play error:", e);
       }
+
+      setIsLoading(false);
     },
     [stopSound]
   );
 
   /* ------------------------------------------------------
-     AUTO-STOP WHEN NAVIGATING AWAY
-     (Retour arrière, changement d’écran, etc.)
+     SEEK (POUR LE SLIDER DU FULLSCREEN)
+  ------------------------------------------------------ */
+  const seek = useCallback(
+    async (positionMillis: number) => {
+      if (!sound) return;
+
+      try {
+        if (Platform.OS === "web" && sound instanceof HTMLAudioElement) {
+          sound.currentTime = positionMillis / 1000;
+          setPosition(positionMillis);
+        } else {
+          await sound.setPositionAsync(positionMillis);
+          setPosition(positionMillis);
+        }
+      } catch (error) {
+        console.log("seek error:", error);
+      }
+    },
+    [sound]
+  );
+
+  /* ------------------------------------------------------
+     STOP AUTOMATIQUE EN CAS DE NAVIGATION
   ------------------------------------------------------ */
   useEffect(() => {
     const unsub = navigation.addListener("beforeRemove", () => {
@@ -104,7 +142,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigation, stopSound]);
 
   /* ------------------------------------------------------
-     CLEANUP ON UNMOUNT
+     CLEANUP FINAL
   ------------------------------------------------------ */
   useEffect(() => {
     return () => {
@@ -115,12 +153,18 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AudioContext.Provider
       value={{
-        sound,
         isPlaying,
+        currentTrack,
         currentTitle,
+        duration,
+        position,
+        isLoading,
+        timer,
         playSound,
         pauseSound,
         stopSound,
+        seek,
+        setTimer,
       }}
     >
       {children}
@@ -130,8 +174,6 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAudio = () => {
   const ctx = useContext(AudioContext);
-  if (!ctx) {
-    throw new Error("useAudio must be used inside <AudioProvider>");
-  }
+  if (!ctx) throw new Error("useAudio must be used inside <AudioProvider>");
   return ctx;
 };
