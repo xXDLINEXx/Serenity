@@ -212,31 +212,25 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     isCleaningUpRef.current = true;
     console.log('[FullScreenPlayer] Cleanup called');
 
-    if (videoPlayerRef.current) {
-      try {
-        console.log('[FullScreenPlayer] Pausing video');
-        videoPlayerRef.current.pause();
-      } catch (error) {
-        console.error('[FullScreenPlayer] Error cleaning up video:', error);
-      }
-    }
-
     if (soundRef.current) {
       try {
         console.log('[FullScreenPlayer] Stopping and unloading sound');
         const soundToClean = soundRef.current;
+        soundRef.current = null;
 
         await soundToClean.setIsLoopingAsync(false).catch(() => {});
         await soundToClean.pauseAsync().catch(() => {});
         await soundToClean.stopAsync().catch(() => {});
         await soundToClean.unloadAsync().catch(() => {});
 
-        soundRef.current = null;
         console.log('[FullScreenPlayer] Sound cleaned up successfully');
       } catch (error) {
         console.error('[FullScreenPlayer] Error cleaning up sound:', error);
       }
     }
+
+    setVideoSource(undefined);
+    console.log('[FullScreenPlayer] Video source cleared');
 
     if (controlsTimeoutRef.current) {
       clearTimeout(controlsTimeoutRef.current);
