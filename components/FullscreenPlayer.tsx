@@ -8,6 +8,7 @@ import {
   Platform,
   Animated,
   Dimensions,
+  Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { VideoView, useVideoPlayer, VideoSource } from 'expo-video';
@@ -395,14 +396,14 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   }
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      activeOpacity={1}
-      onPress={handleScreenPress}
-    >
+    <View style={styles.container}>
       <StatusBar hidden translucent backgroundColor="transparent" />
 
-      {Platform.OS === 'web' && videoSource ? (
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={handleScreenPress}
+      >
+        {Platform.OS === 'web' && videoSource ? (
         <video
           key={currentMedia.id}
           style={{
@@ -441,6 +442,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       ) : (
         <View style={{ width, height, backgroundColor: '#0b0b0f' }} />
       )}
+      </Pressable>
 
       {isLoadingVideo && (
         <View style={styles.loadingOverlay}>
@@ -530,7 +532,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
           </View>
         </View>
       </Animated.View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
