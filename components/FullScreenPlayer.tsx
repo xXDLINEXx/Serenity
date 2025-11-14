@@ -399,11 +399,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     <View style={styles.container}>
       <StatusBar hidden translucent backgroundColor="transparent" />
 
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={handleScreenPress}
-      >
-        {Platform.OS === 'web' && videoSource ? (
+      {Platform.OS === 'web' && videoSource ? (
         <video
           key={currentMedia.id}
           style={{
@@ -442,7 +438,6 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       ) : (
         <View style={{ width, height, backgroundColor: '#0b0b0f' }} />
       )}
-      </Pressable>
 
       {isLoadingVideo && (
         <View style={styles.loadingOverlay}>
@@ -451,6 +446,11 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
           </View>
         </View>
       )}
+
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={handleScreenPress}
+      />
 
       <Animated.View
         style={[styles.overlay, { opacity: fadeAnim }]}
