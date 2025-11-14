@@ -150,7 +150,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       console.log('[FullScreenPlayer] Screen focused');
       return () => {
         console.log('[FullScreenPlayer] Screen unfocused, cleaning up');
-        cleanup();
+        void cleanup();
       };
     }, [])
   );
@@ -218,15 +218,45 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         const soundToClean = soundRef.current;
         soundRef.current = null;
 
-        await soundToClean.setIsLoopingAsync(false).catch(() => {});
-        await soundToClean.pauseAsync().catch(() => {});
-        await soundToClean.stopAsync().catch(() => {});
-        await soundToClean.unloadAsync().catch(() => {});
+        try {
+          await soundToClean.setIsLoopingAsync(false);
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error setting isLooping:', e);
+        }
+
+        try {
+          await soundToClean.pauseAsync();
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error pausing sound:', e);
+        }
+
+        try {
+          await soundToClean.stopAsync();
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error stopping sound:', e);
+        }
+
+        try {
+          await soundToClean.unloadAsync();
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error unloading sound:', e);
+        }
 
         console.log('[FullScreenPlayer] Sound cleaned up successfully');
       } catch (error) {
         console.error('[FullScreenPlayer] Error cleaning up sound:', error);
       }
+    } else {
+      console.log('[FullScreenPlayer] No sound to cleanup');
+    }
+
+    try {
+      if (videoPlayerRef.current) {
+        videoPlayerRef.current.pause();
+        console.log('[FullScreenPlayer] Video paused');
+      }
+    } catch (error) {
+      console.log('[FullScreenPlayer] Error pausing video:', error);
     }
 
     setVideoSource(undefined);
