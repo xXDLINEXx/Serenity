@@ -9,7 +9,7 @@ import { theme } from '@/lib/theme';
 import { engine } from '@/lib/engine';
 import { useSerenityStore } from '@/lib/storage';
 import { soundLibrary } from '@/lib/library';
-import { TIMER_OPTIONS } from '@/lib/frequencies';
+import { TIMER_OPTIONS, timerLabel } from '@/lib/frequencies';
 
 /** Sélection du soir : les sons les plus adaptés à l'endormissement. */
 const SLEEP_IDS = ['pluie', 'ocean', 'bruit-blanc', 'bruit-rose', 'bruit-brun', 'vent', 'foret', 'orage'];
@@ -68,8 +68,10 @@ export default function SommeilScreen() {
   };
 
   const fmtRemaining = (sec: number) => {
-    const m = Math.floor(sec / 60);
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
     const s = sec % 60;
+    if (h > 0) return `${h} h ${String(m).padStart(2, '0')}`;
     return `${m}:${String(s).padStart(2, '0')}`;
   };
 
@@ -119,7 +121,7 @@ export default function SommeilScreen() {
               onPress={() => applyTimer(timerMin === m ? null : m)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.timerText, timerMin === m && styles.timerTextActive]}>{m} min</Text>
+              <Text style={[styles.timerText, timerMin === m && styles.timerTextActive]}>{timerLabel(m)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

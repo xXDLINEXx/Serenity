@@ -10,7 +10,7 @@ import { engine } from '@/lib/engine';
 import { useSerenityStore } from '@/lib/storage';
 // note : le moteur enregistre lui-même la séance à l'ajout d'un canal (trackSession)
 import { soundLibrary } from '@/lib/library';
-import { TIMER_OPTIONS } from '@/lib/frequencies';
+import { TIMER_OPTIONS, timerLabel } from '@/lib/frequencies';
 
 export default function ExplorerScreen() {
   const insets = useSafeAreaInsets();
@@ -129,7 +129,7 @@ export default function ExplorerScreen() {
               onPress={() => applyTimer(timerMin === m ? null : m)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.timerText, timerMin === m && styles.timerTextActive]}>{m} min</Text>
+              <Text style={[styles.timerText, timerMin === m && styles.timerTextActive]}>{timerLabel(m)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>

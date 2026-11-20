@@ -39,4 +39,11 @@ export const WAVEFORM_LABELS: Record<string, string> = {
   sawtooth: 'Dent de scie',
 };
 
-export const TIMER_OPTIONS = [15, 30, 45, 60, 90];
+export const TIMER_OPTIONS = [15, 30, 45, 60, 90, 120, 240, 480];
+
+/** Libellé d'une durée de minuterie : « 45 min », « 2 h », « 8 h »… */
+export function timerLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const h = minutes / 60;
+  return `${h} h`;
+}

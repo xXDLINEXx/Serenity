@@ -19,7 +19,7 @@ import * as Haptics from 'expo-haptics';
 import { theme } from '@/lib/theme';
 import { engine } from '@/lib/engine';
 import { useSerenityStore } from '@/lib/storage';
-import { FREQUENCY_PRESETS, BRAINWAVES, WAVEFORM_LABELS, TIMER_OPTIONS } from '@/lib/frequencies';
+import { FREQUENCY_PRESETS, BRAINWAVES, WAVEFORM_LABELS, TIMER_OPTIONS, timerLabel } from '@/lib/frequencies';
 import type { WaveType } from '@/lib/synth';
 
 const MAX_HZ = 20000;
@@ -345,7 +345,7 @@ export default function FrequencesScreen() {
               onPress={() => applyTimer(timerMin === m ? null : m)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.timerText, timerMin === m && styles.timerTextActive]}>{m} min</Text>
+              <Text style={[styles.timerText, timerMin === m && styles.timerTextActive]}>{timerLabel(m)}</Text>
             </TouchableOpacity>
           ))}
           <TouchableOpacity
