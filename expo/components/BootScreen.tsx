@@ -1,94 +1,105 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Moon, Sparkle } from 'lucide-react-native';
 import { theme } from '@/lib/theme';
 
 const { width, height } = Dimensions.get('window');
+
+/** Hauteurs des barres de l'égalisateur (motif symétrique du logo). */
+const BAR_HEIGHTS = [16, 28, 42, 26, 12, 26, 42, 28, 16];
 
 interface BootScreenProps {
   onFinish: () => void;
 }
 
 /**
- * Écran de démarrage Serenity — palette nuit (#07090F → violet),
- * orbe qui respire lentement, ondes concentriques et égalisateur.
+ * Écran de démarrage Serenity — le logo (croissant, étoiles, égalisateur)
+ * recréé en vectoriel et animé : lune qui pulse, étoiles qui scintillent,
+ * vague sonore qui traverse les barres.
  */
 export function BootScreen({ onFinish }: BootScreenProps) {
-  // Entrée en scène
+  // Entrée / sortie globale
   const fade = useState(() => new Animated.Value(0))[0];
-  const orbScale = useState(() => new Animated.Value(0.6))[0];
-  // Respiration de l'orbe
-  const breathe = useState(() => new Animated.Value(0.5))[0];
-  // Ondes concentriques
-  const ring1 = useState(() => new Animated.Value(0))[0];
-  const ring2 = useState(() => new Animated.Value(0))[0];
-  const ring3 = useState(() => new Animated.Value(0))[0];
-  // Texte
-  const textOpacity = useState(() => new Animated.Value(0))[0];
-  const textRise = useState(() => new Animated.Value(14))[0];
-  // Égalisateur (3 barres)
-  const bar1 = useState(() => new Animated.Value(0.3))[0];
-  const bar2 = useState(() => new Animated.Value(0.3))[0];
-  const bar3 = useState(() => new Animated.Value(0.3))[0];
+  const exitScale = useState(() => new Animated.Value(1))[0];
+
+  // Lune
+  const moonScale = useState(() => new Animated.Value(0.5))[0];
+  const moonGlow = useState(() => new Animated.Value(0.3))[0];
+
+  // Étoiles qui scintillent
+  const star1 = useState(() => new Animated.Value(0.2))[0];
+  const star2 = useState(() => new Animated.Value(0.2))[0];
+
+  // Barres de l'égalisateur (une valeur par barre)
+  const bars = useState(() => BAR_HEIGHTS.map(() => new Animated.Value(0.25)))[0];
+
+  // Mot « Serenity »
+  const wordOpacity = useState(() => new Animated.Value(0))[0];
+  const wordTracking = useState(() => new Animated.Value(0))[0];
 
   useEffect(() => {
     const loops: Animated.CompositeAnimation[] = [];
 
+    // Fondu d'entrée général
     Animated.timing(fade, {
       toValue: 1,
-      duration: 700,
+      duration: 500,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
 
-    Animated.spring(orbScale, {
+    // La lune se dépose au centre
+    Animated.spring(moonScale, {
       toValue: 1,
-      tension: 38,
+      tension: 42,
       friction: 8,
+      delay: 200,
       useNativeDriver: true,
     }).start();
 
-    // L'orbe respire, très lentement
+    // Halo lunaire qui respire
     loops.push(
       Animated.loop(
         Animated.sequence([
-          Animated.timing(breathe, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(breathe, { toValue: 0.5, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(moonGlow, { toValue: 0.75, duration: 2200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(moonGlow, { toValue: 0.3, duration: 2200, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ])
       )
     );
 
-    // Trois ondes qui se propagent, décalées
-    const ringLoop = (anim: Animated.Value, delay: number) =>
+    // Étoiles : scintillements décalés
+    const twinkle = (anim: Animated.Value, period: number) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(anim, { toValue: 1, duration: 3000, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: true }),
-          Animated.delay(3000 - delay),
+          Animated.timing(anim, { toValue: 1, duration: period, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0.2, duration: period, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ])
       );
-    loops.push(ringLoop(ring1, 0), ringLoop(ring2, 1000), ringLoop(ring3, 2000));
+    loops.push(twinkle(star1, 1100), twinkle(star2, 1500));
 
-    // Le titre apparaît en glissant
+    // Égalisateur : la vague traverse les barres en boucle
+    bars.forEach((v, i) => {
+      loops.push(
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(i * 120),
+            Animated.timing(v, { toValue: 1, duration: 380, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+            Animated.timing(v, { toValue: 0.3, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+            Animated.delay((BAR_HEIGHTS.length - 1 - i) * 120),
+          ])
+        )
+      );
+    });
+
+    // Le mot apparaît avec un léger resserrement du tracking
     Animated.sequence([
-      Animated.delay(500),
+      Animated.delay(900),
       Animated.parallel([
-        Animated.timing(textOpacity, { toValue: 1, duration: 900, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-        Animated.timing(textRise, { toValue: 0, duration: 900, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        Animated.timing(wordOpacity, { toValue: 1, duration: 800, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        Animated.timing(wordTracking, { toValue: 1, duration: 800, easing: Easing.out(Easing.ease), useNativeDriver: true }),
       ]),
     ]).start();
-
-    // Égalisateur : trois barres qui dansent doucement
-    const barLoop = (anim: Animated.Value, duration: number, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(anim, { toValue: 1, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0.35, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        ])
-      );
-    loops.push(barLoop(bar1, 550, 0), barLoop(bar2, 700, 180), barLoop(bar3, 620, 360));
 
     loops.forEach(l => l.start());
 
@@ -96,10 +107,9 @@ export function BootScreen({ onFinish }: BootScreenProps) {
     const timeout = setTimeout(() => {
       Animated.parallel([
         Animated.timing(fade, { toValue: 0, duration: 650, easing: Easing.in(Easing.ease), useNativeDriver: true }),
-        Animated.timing(orbScale, { toValue: 1.25, duration: 650, easing: Easing.in(Easing.ease), useNativeDriver: true }),
-        Animated.timing(textOpacity, { toValue: 0, duration: 450, useNativeDriver: true }),
+        Animated.timing(exitScale, { toValue: 1.08, duration: 650, easing: Easing.in(Easing.ease), useNativeDriver: true }),
       ]).start(() => onFinish());
-    }, 2800);
+    }, 3200);
 
     return () => {
       clearTimeout(timeout);
@@ -108,65 +118,55 @@ export function BootScreen({ onFinish }: BootScreenProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderRing = (anim: Animated.Value, baseSize: number, tint: string) => {
-    const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.55, 2.4] });
-    const opacity = anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] });
-    return (
-      <Animated.View
-        style={[
-          styles.ring,
-          { width: baseSize, height: baseSize, borderRadius: baseSize / 2, borderColor: tint, transform: [{ scale }], opacity },
-        ]}
-      />
-    );
-  };
-
-  const barHeight = (anim: Animated.Value) =>
-    anim.interpolate({ inputRange: [0, 1], outputRange: [6, 26] });
+  const wordSpacing = wordTracking.interpolate({ inputRange: [0, 1], outputRange: [10, 3] });
+  const glowScale = moonGlow.interpolate({ inputRange: [0.3, 0.75], outputRange: [1, 1.25] });
 
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[theme.bg, theme.bg2, '#171331']}
+        colors={['#050608', theme.bg, '#0B0E1A']}
         style={styles.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.4, y: 1 }}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
       >
-        {/* Halo diffus derrière l'orbe */}
-        <Animated.View style={[styles.halo, { opacity: breathe.interpolate({ inputRange: [0.5, 1], outputRange: [0.25, 0.55] }) }]} />
+        <Animated.View style={[styles.stage, { opacity: fade, transform: [{ scale: exitScale }] }]}>
+          {/* Marque : lune + étoiles + égalisateur */}
+          <View style={styles.markWrap}>
+            {/* Halo derrière la lune */}
+            <Animated.View
+              style={[styles.moonHalo, { opacity: moonGlow, transform: [{ scale: glowScale }] }]}
+            />
 
-        {/* Ondes concentriques */}
-        <View style={styles.rings}>
-          {renderRing(ring1, 190, theme.halo)}
-          {renderRing(ring2, 190, 'rgba(136, 113, 201, 0.3)')}
-          {renderRing(ring3, 190, 'rgba(100, 125, 255, 0.22)')}
-        </View>
+            {/* Étoiles */}
+            <Animated.View style={[styles.star1, { opacity: star1 }]}>
+              <Sparkle size={16} color="#FFFFFF" fill="#FFFFFF" />
+            </Animated.View>
+            <Animated.View style={[styles.star2, { opacity: star2 }]}>
+              <Sparkle size={11} color="#FFFFFF" fill="#FFFFFF" />
+            </Animated.View>
 
-        {/* Orbe centrale */}
-        <Animated.View style={[styles.orbWrap, { opacity: fade, transform: [{ scale: orbScale }] }]}>
-          <Animated.View style={{ transform: [{ scale: breathe.interpolate({ inputRange: [0.5, 1], outputRange: [1, 1.07] }) }] }}>
-            <LinearGradient
-              colors={[theme.blue, theme.violet, '#2A2A55']}
-              style={styles.orb}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.orbInner} />
-            </LinearGradient>
-          </Animated.View>
-          <View style={styles.orbEdge} />
-        </Animated.View>
+            {/* Croissant de lune */}
+            <Animated.View style={{ transform: [{ scale: moonScale }] }}>
+              <Moon size={74} color="#FFFFFF" fill="#FFFFFF" strokeWidth={1.4} />
+            </Animated.View>
 
-        {/* Titre + sous-titre + égalisateur */}
-        <Animated.View style={[styles.textWrap, { opacity: fade }]}>
-          <Animated.View style={{ opacity: textOpacity, transform: [{ translateY: textRise }] }}>
-            <Text style={styles.title}>Serenity</Text>
-            <Text style={styles.subtitle}>BIEN-ÊTRE SONORE</Text>
-          </Animated.View>
-          <Animated.View style={[styles.eqRow, { opacity: textOpacity }]}>
-            <Animated.View style={[styles.eqBar, { height: barHeight(bar1) }]} />
-            <Animated.View style={[styles.eqBar, { height: barHeight(bar2) }]} />
-            <Animated.View style={[styles.eqBar, { height: barHeight(bar3) }]} />
+            {/* Égalisateur */}
+            <View style={styles.eqRow}>
+              {BAR_HEIGHTS.map((h, i) => (
+                <Animated.View
+                  key={i}
+                  style={[
+                    styles.eqBar,
+                    { height: h, transform: [{ scaleY: bars[i] }] },
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Mot-symbole */}
+          <Animated.View style={{ opacity: wordOpacity }}>
+            <Text style={[styles.wordmark, { letterSpacing: wordSpacing }]}>Serenity</Text>
           </Animated.View>
         </Animated.View>
       </LinearGradient>
@@ -190,85 +190,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  halo: {
-    position: 'absolute',
-    width: 340,
-    height: 340,
-    borderRadius: 170,
-    backgroundColor: 'rgba(100, 125, 255, 0.16)',
-  },
-  rings: {
-    position: 'absolute',
-    justifyContent: 'center',
+  stage: {
     alignItems: 'center',
   },
-  ring: {
-    position: 'absolute',
-    borderWidth: 1.5,
-  },
-  orbWrap: {
-    justifyContent: 'center',
+  markWrap: {
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: 200,
   },
-  orb: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: theme.blue,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 40,
-    elevation: 20,
-  },
-  orbInner: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(232, 234, 242, 0.25)',
-  },
-  orbEdge: {
+  moonHalo: {
     position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 1,
-    borderColor: 'rgba(232, 234, 242, 0.2)',
+    top: -34,
+    width: 170,
+    height: 170,
+    borderRadius: 85,
+    backgroundColor: 'rgba(100, 125, 255, 0.18)',
   },
-  textWrap: {
+  star1: {
     position: 'absolute',
-    bottom: '18%',
-    alignItems: 'center',
-    gap: 14,
+    top: 4,
+    left: -46,
   },
-  title: {
-    fontSize: 34,
-    fontWeight: '300' as const,
-    color: theme.text,
-    letterSpacing: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 11,
-    color: theme.textDim,
-    letterSpacing: 5,
-    textAlign: 'center',
-    marginTop: 2,
+  star2: {
+    position: 'absolute',
+    top: 30,
+    right: -50,
   },
   eqRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     gap: 5,
-    height: 26,
-    marginTop: 10,
+    marginTop: -22,
+    zIndex: -1,
   },
   eqBar: {
-    width: 4,
-    borderRadius: 2,
-    backgroundColor: theme.blue,
-    opacity: 0.85,
+    width: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
+  },
+  wordmark: {
+    fontSize: 38,
+    fontWeight: '400' as const,
+    color: '#FFFFFF',
+    marginTop: 34,
   },
 });
