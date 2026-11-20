@@ -583,7 +583,11 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   animationContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   iconCircle: {
     width: 200,
@@ -697,7 +701,11 @@ const styles = StyleSheet.create({
     left: width / 2 - 100,
   },
   lightning: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   star: {

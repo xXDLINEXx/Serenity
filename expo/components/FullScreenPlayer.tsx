@@ -480,7 +480,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
 
   return (
     <View style={styles.container}>
-      <StatusBar hidden translucent backgroundColor="transparent" />
+      <StatusBar hidden />
 
       {Platform.OS === 'web' && videoSource ? (
         <video
@@ -629,7 +629,11 @@ const styles = StyleSheet.create({
     height: height,
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'space-between',
   },
@@ -731,7 +735,11 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
   },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     alignItems: 'center',
     justifyContent: 'center',
