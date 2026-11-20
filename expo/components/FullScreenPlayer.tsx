@@ -407,9 +407,11 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   const handleStop = async () => {
     console.log('[FullScreenPlayer] Stop button pressed');
     await cleanup();
-    if (router.canGoBack()) {
+    // router.canGoBack() n'est plus supporté sur web avec expo-router v58 :
+    // on tente toujours back(), avec repli vers l'accueil en cas d'échec.
+    try {
       router.back();
-    } else {
+    } catch {
       router.replace('/');
     }
   };
