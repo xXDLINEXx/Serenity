@@ -32,9 +32,11 @@ export function SoundPlayer({ sound: initialSound, onClose }: Props) {
   const audioRef = useRef<Audio.Sound | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const toSource = useCallback((src?: number | string | null) => {
+  const toSource = useCallback((src?: string | number | { uri: string } | null) => {
     if (!src) return undefined;
-    return typeof src === 'number' ? src : { uri: src };
+    if (typeof src === 'number') return src;
+    if (typeof src === 'string') return { uri: src };
+    return src;
   }, []);
 
   const audioSource = useMemo(

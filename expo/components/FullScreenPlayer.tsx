@@ -38,7 +38,7 @@ const formatTime = (seconds: number) => {
 
 async function toSourceAsync(
   src: number | string | { uri: string } | null | undefined
-): Promise<string | { uri: string } | undefined> {
+): Promise<{ uri: string } | undefined> {
   if (!src) {
     console.warn('[FullScreenPlayer] toSourceAsync: No source provided');
     return undefined;
@@ -93,7 +93,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   const [sliderValue, setSliderValue] = useState(0);
   const [isSeeking, setIsSeeking] = useState(false);
 
-  const videoPlayer = useVideoPlayer(videoSource, player => {
+  const videoPlayer = useVideoPlayer(videoSource ?? null, player => {
     if (videoSource) {
       player.loop = true;
       player.muted = true;
@@ -103,6 +103,7 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   });
 
   const soundRef = useRef<Audio.Sound | null>(null);
+  const loadIdRef = useRef(0);
   const videoPlayerRef = useRef(videoPlayer);
   const fadeAnimRef = useRef(new Animated.Value(1));
   const fadeAnim = fadeAnimRef.current;
@@ -118,7 +119,12 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   const { currentTime = 0 } = useEvent(
     videoPlayer,
     'timeUpdate',
-    { currentTime: videoPlayer?.currentTime ?? 0 }
+    {
+      currentTime: videoPlayer?.currentTime ?? 0,
+      bufferedPosition: 0,
+      currentLiveTimestamp: 0,
+      currentOffsetFromLive: 0,
+    }
   );
 
   const duration = videoPlayer?.duration ?? 0;
@@ -130,8 +136,6 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
   }, [currentTime, isSeeking]);
 
   useEffect(() => {
-    loadMedia();
-
     if (Platform.OS === 'android') {
       NavigationBar.setVisibilityAsync('hidden').catch(console.error);
       SystemUI.setBackgroundColorAsync('transparent').catch(console.error);
@@ -141,6 +145,9 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       if (Platform.OS === 'android') {
         NavigationBar.setVisibilityAsync('visible').catch(console.error);
       }
+      // Filet de sécurité : si le composant est démonté sans passer par
+      // useFocusEffect, on arrête quand même tout ce qui joue.
+      void cleanup();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -212,6 +219,10 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
     isCleaningUpRef.current = true;
     console.log('[FullScreenPlayer] Cleanup called');
 
+    // Invalide tout chargement en cours : si loadMedia finit après ce point,
+    // il verra un id périmé et se neutralisera tout seul.
+    loadIdRef.current += 1;
+
     if (soundRef.current) {
       try {
         console.log('[FullScreenPlayer] Stopping and unloading sound');
@@ -282,6 +293,12 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
 
     console.log('[FullScreenPlayer] Cleaning up previous media...');
     await cleanup();
+
+    // Identifiant de génération : si cleanup est rappelé entre-temps (STOP, back,
+    // changement de média), ce chargement devient périmé et s'annule tout seul.
+    const myLoad = ++loadIdRef.current;
+    const isStale = () => loadIdRef.current !== myLoad;
+
     console.log('[FullScreenPlayer] Cleanup complete, starting new media load');
     setIsLoadingVideo(true);
 
@@ -289,6 +306,12 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       await Audio.setAudioModeAsync({
         playsInSilentModeIOS: true,
       });
+
+      if (isStale()) {
+        console.log('[FullScreenPlayer] Load stale after audio mode, aborting');
+        setIsLoadingVideo(false);
+        return;
+      }
 
       console.log('[FullScreenPlayer] Loading audio...');
       const audioSource = await toSourceAsync(currentMedia.audio);
@@ -302,6 +325,12 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         return;
       }
 
+      if (isStale()) {
+        console.log('[FullScreenPlayer] Load stale after audio source, aborting');
+        setIsLoadingVideo(false);
+        return;
+      }
+
       console.log(
         '[FullScreenPlayer] Creating Audio.Sound with source:',
         JSON.stringify(audioSource)
@@ -311,6 +340,30 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
         volume: 1.0,
         shouldPlay: true,
       });
+
+      // Un STOP/back est arrivé pendant la création du son : on le détruit
+      // immédiatement au lieu de le laisser jouer en fantôme.
+      if (isStale()) {
+        console.log('[FullScreenPlayer] Load stale after sound creation, unloading orphan sound');
+        try {
+          await sound.setIsLoopingAsync(false);
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error setting isLooping on orphan:', e);
+        }
+        try {
+          await sound.stopAsync();
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error stopping orphan sound:', e);
+        }
+        try {
+          await sound.unloadAsync();
+        } catch (e) {
+          console.log('[FullScreenPlayer] Error unloading orphan sound:', e);
+        }
+        setIsLoadingVideo(false);
+        return;
+      }
+
       soundRef.current = sound;
       await sound.playAsync();
       console.log('[FullScreenPlayer] Audio started successfully');
@@ -318,6 +371,12 @@ export function FullScreenPlayer({ initialMediaId }: FullScreenPlayerProps) {
       console.log('[FullScreenPlayer] Loading video...');
       const videoSourceResolved = await toSourceAsync(currentMedia.video);
       console.log('[FullScreenPlayer] Video source after toSourceAsync:', videoSourceResolved);
+
+      if (isStale()) {
+        console.log('[FullScreenPlayer] Load stale after video source, aborting');
+        setIsLoadingVideo(false);
+        return;
+      }
 
       if (videoSourceResolved) {
         console.log('[FullScreenPlayer] Setting video source...');

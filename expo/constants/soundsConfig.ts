@@ -1,6 +1,8 @@
 // constants/soundsConfig.ts
 
-export const soundsConfig = [
+import { SoundConfig } from '@/types/soundsConfig';
+
+export const soundsConfig: SoundConfig[] = [
   {
     id: "vent-leger",
     title: "Vent léger",

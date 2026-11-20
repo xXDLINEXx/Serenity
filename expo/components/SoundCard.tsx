@@ -8,7 +8,7 @@ interface SoundCardProps {
   title: string;
   description: string;
   thumbnail: string;
-  gradient: string[];
+  gradient: [string, string, ...string[]];
 }
 
 export default function SoundCard({

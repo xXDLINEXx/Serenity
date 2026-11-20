@@ -102,7 +102,7 @@ export function SoundList({ onSelectSound }: SoundListProps) {
         <SoundCard
           key={index}
           sound={sound}
-          onPress={() => onSelectSound(sound)}
+          onPress={() => onSelectSound(sound as unknown as SoundConfig)}
         />
       ))}
     </ScrollView>

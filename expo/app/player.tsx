@@ -173,7 +173,7 @@ export default function PlayerScreen() {
     if (audio.currentTrack === url && audio.isPlaying) {
       await audio.pauseSound();
     } else {
-      await audio.playSound(url, title);
+      await audio.playSound(url as string, title);
     }
   };
 

@@ -1,7 +1,7 @@
 export interface SoundConfig {
   id: string;
   title: string;
-  type: string;
+  type?: string;
   audio?: string | number | { uri: string } | null;
   video?: string | number | { uri: string } | null;
   frequency?: string | null;

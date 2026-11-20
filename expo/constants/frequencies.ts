@@ -7,7 +7,7 @@ export interface HealingFrequency {
   description: string;
   benefits: string;
   color: string;
-  audioUrl: string | number;
+  audioUrl: string | number | { uri: string };
 }
 
 const palette = ['#8B5CF6', '#A78BFA', '#C4B5FD', '#DDD6FE', '#E9D5FF', '#FAF5FF', '#FDF4FF', '#FCE7F3', '#FBCFE8', '#F9A8D4'];
@@ -59,7 +59,7 @@ export const healingFrequencies: HealingFrequency[] = [
     audioUrl: tryRequire('../media/frequency/66hz.mp3') ?? 'https://cdn.jsdelivr.net/gh/xXDLINEXx/serenity/media/frequency/66hz.mp3'
   },
   { 
-    id: '396-hz-417-hz-639hz', 
+    id: '396-417-639hz', 
     frequency: '396/417/639 Hz', 
     title: '396/417/639 Hz', 
     description: 'Triple fréquence Solfège',

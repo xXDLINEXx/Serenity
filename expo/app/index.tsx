@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SoundCard } from '@/components/SoundCard';
+import SoundCard from '@/components/SoundCard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { soundsConfig } from '@/constants/soundsConfig';
 import { healingFrequencies } from '@/constants/frequencies';
@@ -27,7 +27,7 @@ const getFrequencyImage = (frequencyId: string): string => {
     '10hz': 'https://images.unsplash.com/photo-1534551767192-78b8dd45b51b?w=400&q=80',
     '33hz': 'https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=400&q=80',
     '66hz': 'https://images.unsplash.com/photo-1470790376778-a9fbc86d70e2?w=400&q=80',
-    '396-hz-417-hz-639hz': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80',
+    '396-417-639hz': 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&q=80',
     '417hz': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80',
     '852hz': 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&q=80',
     '1441hz': 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80',
@@ -36,62 +36,70 @@ const getFrequencyImage = (frequencyId: string): string => {
   return imageMapping[frequencyId] || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=400&q=80';
 };
 
-const sleepSounds = [
+interface SleepSoundCard {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail: string;
+  gradient: [string, string];
+}
+
+const sleepSounds: SleepSoundCard[] = [
   {
     id: "pluie-douce",
     title: "Pluie douce",
     description: "Pluie légère sur les feuilles",
     thumbnail: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(210 40% 20%), hsl(230 35% 15%))",
+    gradient: ["#16283F", "#0D1420"],
   },
   {
     id: "vague-de-locean",
     title: "Vague de l'océan",
     description: "Vagues rythmiques de l'océan",
     thumbnail: "https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(195 60% 25%), hsl(210 50% 18%))",
+    gradient: ["#0F3D52", "#0A1F2B"],
   },
   {
     id: "feu-de-camp",
     title: "Feu de camp",
     description: "Crépitement chaleureux du feu",
     thumbnail: "https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/vr26mlk4l6oqchaekmtwk",
-    gradient: "linear-gradient(135deg, hsl(20 60% 20%), hsl(10 50% 15%))",
+    gradient: ["#4A1F0A", "#26120A"],
   },
   {
     id: "foret-paisible",
     title: "Forêt paisible",
     description: "Oiseaux et nature de la forêt",
     thumbnail: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(140 40% 20%), hsl(160 35% 15%))",
+    gradient: ["#1C3D26", "#12261A"],
   },
   {
     id: "vent-leger",
     title: "Vent léger",
     description: "Son doux du vent dans les arbres",
     thumbnail: "https://images.unsplash.com/photo-1500964757637-c85e8a162699?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(180 30% 25%), hsl(200 30% 18%))",
+    gradient: ["#1F4247", "#122A2E"],
   },
   {
     id: "orage-apaisant",
     title: "Orage apaisant",
     description: "Tonnerre lointain et pluie",
     thumbnail: "https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(240 30% 20%), hsl(250 35% 15%))",
+    gradient: ["#1E1E3C", "#141126"],
   },
   {
     id: "riviere-calme",
     title: "Rivière calme",
     description: "Écoulement paisible d'une rivière",
     thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(200 60% 20%), hsl(220 50% 15%))",
+    gradient: ["#123C52", "#0C1E2B"],
   },
   {
     id: "bruit-blanc",
     title: "Bruit blanc",
     description: "Bruit constant et uniforme",
     thumbnail: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=400&q=80",
-    gradient: "linear-gradient(135deg, hsl(280 45% 22%), hsl(270 40% 16%))",
+    gradient: ["#33234A", "#1E1430"],
   },
 ];
 
@@ -102,15 +110,6 @@ export default function HomeScreen() {
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
   const { isPlaying, currentTitle, pauseSound, stopSound, playSound } = useAudio();
   const [activeSection, setActiveSection] = useState<Section>('sounds');
-
-  const getAudioUrlForSound = (soundId: string): string | number => {
-    const soundConfig = soundsConfig.find((s) => s.id === soundId);
-    const audio = soundConfig?.audio;
-    if (typeof audio === 'string' || typeof audio === 'number') {
-      return audio;
-    }
-    return '';
-  };
 
   React.useEffect(() => {
     Animated.loop(
@@ -189,7 +188,6 @@ export default function HomeScreen() {
                   description={sound.description}
                   thumbnail={sound.thumbnail}
                   gradient={sound.gradient}
-                  audioUrl={getAudioUrlForSound(sound.id)}
                 />
               </View>
             ))}
@@ -206,8 +204,7 @@ export default function HomeScreen() {
                     title={freq.title}
                     description={freq.description}
                     thumbnail={frequencyImage}
-                    gradient={`linear-gradient(135deg, ${freq.color}cc, ${freq.color}99, #000000ee)`}
-                    audioUrl={freq.audioUrl}
+                    gradient={[freq.color, '#0B0B0F']}
                   />
                 </View>
               );
