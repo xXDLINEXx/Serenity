@@ -39,6 +39,19 @@ function timeAgo(ts: number): string {
   return d === 1 ? 'hier' : `il y a ${d} j`;
 }
 
+/** Statistiques calculées à partir de l'historique (petit tableau, recalcul à chaque rendu). */
+function computeStats(history: HistoryEntry[]) {
+  const weekAgo = Date.now() - 7 * 24 * 3600_000;
+  const totalSeconds = history.reduce((acc, e) => acc + (e.seconds ?? 0), 0);
+  const weekCount = history.filter(e => e.at >= weekAgo).length;
+  const byKind = history.reduce<Record<string, number>>((acc, e) => {
+    acc[e.kind] = (acc[e.kind] ?? 0) + 1;
+    return acc;
+  }, {});
+  const topKind = Object.entries(byKind).sort((a, b) => b[1] - a[1])[0]?.[0] as HistoryEntry['kind'] | undefined;
+  return { sessions: history.length, totalMinutes: Math.round(totalSeconds / 60), weekCount, topKind };
+}
+
 export default function ProfilScreen() {
   const insets = useSafeAreaInsets();
   const { favorites, history, savedConfigs, settings, updateSettings, clearHistory, removeConfig } = useSerenityStore();
@@ -46,17 +59,7 @@ export default function ProfilScreen() {
 
   useEffect(() => engine.subscribe(() => force(n => n + 1)), []);
 
-  const stats = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 24 * 3600_000;
-    const totalSeconds = history.reduce((acc, e) => acc + (e.seconds ?? 0), 0);
-    const weekCount = history.filter(e => e.at >= weekAgo).length;
-    const byKind = history.reduce<Record<string, number>>((acc, e) => {
-      acc[e.kind] = (acc[e.kind] ?? 0) + 1;
-      return acc;
-    }, {});
-    const topKind = Object.entries(byKind).sort((a, b) => b[1] - a[1])[0]?.[0] as HistoryEntry['kind'] | undefined;
-    return { sessions: history.length, totalMinutes: Math.round(totalSeconds / 60), weekCount, topKind };
-  }, [history]);
+  const stats = computeStats(history);
 
   const favoriteItems = useMemo(() => {
     return favorites

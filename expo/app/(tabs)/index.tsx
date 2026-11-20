@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, StatusBar, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -17,10 +17,13 @@ function greeting(): string {
   return 'Belle nuit';
 }
 
+/** Date du jour, calculée une fois au chargement du module. */
+const TODAY = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
 /** Halo circulaire qui « respire » lentement. */
 function BreathingOrb({ reduced }: { reduced: boolean }) {
-  const scale = useRef(new Animated.Value(1)).current;
-  const glow = useRef(new Animated.Value(0.55)).current;
+  const scale = React.useState(() => new Animated.Value(1))[0];
+  const glow = React.useState(() => new Animated.Value(0.55))[0];
 
   useEffect(() => {
     if (reduced) {
@@ -97,11 +100,6 @@ export default function AccueilScreen() {
   const favorites = useSerenityStore(s => s.favorites);
   const history = useSerenityStore(s => s.history);
   const settings = useSerenityStore(s => s.settings);
-  const [day, setDay] = React.useState('');
-
-  React.useEffect(() => {
-    setDay(new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }));
-  }, []);
 
   const recent = useMemo(() => history.slice(0, 4), [history]);
   const favoriteSounds = useMemo(
@@ -124,7 +122,7 @@ export default function AccueilScreen() {
       >
         {/* En-tête */}
         <View style={styles.header}>
-          <Text style={styles.date}>{day}</Text>
+          <Text style={styles.date}>{TODAY}</Text>
           <Text style={styles.greeting}>{greeting()}</Text>
           <Text style={styles.subtitle}>Prenez un instant pour respirer.</Text>
         </View>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -35,7 +35,7 @@ const WAVE_TYPES: WaveType[] = ['sine', 'square', 'triangle', 'sawtooth'];
 
 /** Grosse pastille de lecture avec halo. */
 function PlayOrb({ playing, onPress }: { playing: boolean; onPress: () => void }) {
-  const pulse = useRef(new Animated.Value(1)).current;
+  const pulse = React.useState(() => new Animated.Value(1))[0];
   useEffect(() => {
     if (!playing) {
       pulse.setValue(1);

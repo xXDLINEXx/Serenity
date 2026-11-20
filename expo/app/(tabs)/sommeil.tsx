@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, StatusBar, Animated, Easing } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,7 +33,7 @@ export default function SommeilScreen() {
   const remaining = engine.timerRemainingSec();
 
   // Lune qui respire très lentement
-  const glow = useRef(new Animated.Value(0.5)).current;
+  const glow = useState(() => new Animated.Value(0.5))[0];
   useEffect(() => {
     if (settings.reducedAnimations) {
       glow.setValue(0.85);
