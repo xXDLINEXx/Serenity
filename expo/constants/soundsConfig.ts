@@ -51,6 +51,18 @@ export const soundsConfig: SoundConfig[] = [
     audio: require("../media/audio/bruit-blanc.mp3"),
     video: require("../media/video/bruit-blanc.mp4"),
   },
+  {
+    id: "bruit-rose",
+    title: "Bruit rose",
+    audio: require("../media/audio/bruit-rose.mp3"),
+    video: require("../media/video/bruit-blanc.mp4"),
+  },
+  {
+    id: "bruit-brun",
+    title: "Bruit brun",
+    audio: require("../media/audio/bruit-brun.mp3"),
+    video: require("../media/video/bruit-blanc.mp4"),
+  },
 
   // ---- Frequencies ----
   {
