@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image } from 'expo-image';
+import { theme } from '@/lib/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -9,173 +9,165 @@ interface BootScreenProps {
   onFinish: () => void;
 }
 
+/**
+ * Écran de démarrage Serenity — palette nuit (#07090F → violet),
+ * orbe qui respire lentement, ondes concentriques et égalisateur.
+ */
 export function BootScreen({ onFinish }: BootScreenProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  
-  const wave1 = useRef(new Animated.Value(0)).current;
-  const wave2 = useRef(new Animated.Value(0)).current;
-  const wave3 = useRef(new Animated.Value(0)).current;
-  const wave4 = useRef(new Animated.Value(0)).current;
+  // Entrée en scène
+  const fade = useState(() => new Animated.Value(0))[0];
+  const orbScale = useState(() => new Animated.Value(0.6))[0];
+  // Respiration de l'orbe
+  const breathe = useState(() => new Animated.Value(0.5))[0];
+  // Ondes concentriques
+  const ring1 = useState(() => new Animated.Value(0))[0];
+  const ring2 = useState(() => new Animated.Value(0))[0];
+  const ring3 = useState(() => new Animated.Value(0))[0];
+  // Texte
+  const textOpacity = useState(() => new Animated.Value(0))[0];
+  const textRise = useState(() => new Animated.Value(14))[0];
+  // Égalisateur (3 barres)
+  const bar1 = useState(() => new Animated.Value(0.3))[0];
+  const bar2 = useState(() => new Animated.Value(0.3))[0];
+  const bar3 = useState(() => new Animated.Value(0.3))[0];
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    const loops: Animated.CompositeAnimation[] = [];
 
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 8000,
-        useNativeDriver: true,
-      })
-    ).start();
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: 700,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
 
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    Animated.spring(orbScale, {
+      toValue: 1,
+      tension: 38,
+      friction: 8,
+      useNativeDriver: true,
+    }).start();
 
-    const createWaveAnimation = (anim: Animated.Value, delay: number) => {
+    // L'orbe respire, très lentement
+    loops.push(
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(breathe, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(breathe, { toValue: 0.5, duration: 2600, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ])
+      )
+    );
+
+    // Trois ondes qui se propagent, décalées
+    const ringLoop = (anim: Animated.Value, delay: number) =>
       Animated.loop(
         Animated.sequence([
           Animated.delay(delay),
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(anim, {
-            toValue: 0,
-            duration: 0,
-            useNativeDriver: true,
-          }),
+          Animated.timing(anim, { toValue: 1, duration: 3000, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: true }),
+          Animated.delay(3000 - delay),
         ])
-      ).start();
-    };
+      );
+    loops.push(ringLoop(ring1, 0), ringLoop(ring2, 1000), ringLoop(ring3, 2000));
 
-    createWaveAnimation(wave1, 0);
-    createWaveAnimation(wave2, 500);
-    createWaveAnimation(wave3, 1000);
-    createWaveAnimation(wave4, 1500);
+    // Le titre apparaît en glissant
+    Animated.sequence([
+      Animated.delay(500),
+      Animated.parallel([
+        Animated.timing(textOpacity, { toValue: 1, duration: 900, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        Animated.timing(textRise, { toValue: 0, duration: 900, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+      ]),
+    ]).start();
 
+    // Égalisateur : trois barres qui dansent doucement
+    const barLoop = (anim: Animated.Value, duration: number, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(anim, { toValue: 1, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0.35, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ])
+      );
+    loops.push(barLoop(bar1, 550, 0), barLoop(bar2, 700, 180), barLoop(bar3, 620, 360));
+
+    loops.forEach(l => l.start());
+
+    // Sortie en douceur
     const timeout = setTimeout(() => {
       Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1.2,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        onFinish();
-      });
-    }, 3000);
+        Animated.timing(fade, { toValue: 0, duration: 650, easing: Easing.in(Easing.ease), useNativeDriver: true }),
+        Animated.timing(orbScale, { toValue: 1.25, duration: 650, easing: Easing.in(Easing.ease), useNativeDriver: true }),
+        Animated.timing(textOpacity, { toValue: 0, duration: 450, useNativeDriver: true }),
+      ]).start(() => onFinish());
+    }, 2800);
 
     return () => {
       clearTimeout(timeout);
+      loops.forEach(l => l.stop());
     };
-  }, [fadeAnim, scaleAnim, rotateAnim, pulseAnim, wave1, wave2, wave3, wave4, onFinish]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
-  const renderWave = (anim: Animated.Value, size: number, delay: number) => {
-    const scale = anim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [1, 2.5],
-    });
-
-    const opacity = anim.interpolate({
-      inputRange: [0, 0.5, 1],
-      outputRange: [0.6, 0.3, 0],
-    });
-
+  const renderRing = (anim: Animated.Value, baseSize: number, tint: string) => {
+    const scale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.55, 2.4] });
+    const opacity = anim.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, 0.55, 0] });
     return (
       <Animated.View
         style={[
-          styles.wave,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            transform: [{ scale }],
-            opacity,
-          },
+          styles.ring,
+          { width: baseSize, height: baseSize, borderRadius: baseSize / 2, borderColor: tint, transform: [{ scale }], opacity },
         ]}
       />
     );
   };
 
+  const barHeight = (anim: Animated.Value) =>
+    anim.interpolate({ inputRange: [0, 1], outputRange: [6, 26] });
+
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={['#0A1628', '#1A2A4A', '#2A3A5A']}
+        colors={[theme.bg, theme.bg2, '#171331']}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0.4, y: 1 }}
       >
-        <View style={styles.wavesContainer}>
-          {renderWave(wave1, 200, 0)}
-          {renderWave(wave2, 200, 500)}
-          {renderWave(wave3, 200, 1000)}
-          {renderWave(wave4, 200, 1500)}
+        {/* Halo diffus derrière l'orbe */}
+        <Animated.View style={[styles.halo, { opacity: breathe.interpolate({ inputRange: [0.5, 1], outputRange: [0.25, 0.55] }) }]} />
+
+        {/* Ondes concentriques */}
+        <View style={styles.rings}>
+          {renderRing(ring1, 190, theme.halo)}
+          {renderRing(ring2, 190, 'rgba(136, 113, 201, 0.3)')}
+          {renderRing(ring3, 190, 'rgba(100, 125, 255, 0.22)')}
         </View>
 
-        <Animated.View
-          style={[
-            styles.glowContainer,
-            {
-              transform: [{ rotate: spin }],
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <View style={styles.glow} />
+        {/* Orbe centrale */}
+        <Animated.View style={[styles.orbWrap, { opacity: fade, transform: [{ scale: orbScale }] }]}>
+          <Animated.View style={{ transform: [{ scale: breathe.interpolate({ inputRange: [0.5, 1], outputRange: [1, 1.07] }) }] }}>
+            <LinearGradient
+              colors={[theme.blue, theme.violet, '#2A2A55']}
+              style={styles.orb}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.orbInner} />
+            </LinearGradient>
+          </Animated.View>
+          <View style={styles.orbEdge} />
         </Animated.View>
 
-        <Animated.View
-          style={[
-            styles.contentContainer,
-            {
-              opacity: fadeAnim,
-              transform: [
-                { scale: Animated.multiply(scaleAnim, pulseAnim) },
-              ],
-            },
-          ]}
-        >
-          <Image
-            source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/3o6gf2sqfyfmef982k3gn' }}
-            style={styles.logo}
-            contentFit="contain"
-          />
+        {/* Titre + sous-titre + égalisateur */}
+        <Animated.View style={[styles.textWrap, { opacity: fade }]}>
+          <Animated.View style={{ opacity: textOpacity, transform: [{ translateY: textRise }] }}>
+            <Text style={styles.title}>Serenity</Text>
+            <Text style={styles.subtitle}>BIEN-ÊTRE SONORE</Text>
+          </Animated.View>
+          <Animated.View style={[styles.eqRow, { opacity: textOpacity }]}>
+            <Animated.View style={[styles.eqBar, { height: barHeight(bar1) }]} />
+            <Animated.View style={[styles.eqBar, { height: barHeight(bar2) }]} />
+            <Animated.View style={[styles.eqBar, { height: barHeight(bar3) }]} />
+          </Animated.View>
         </Animated.View>
       </LinearGradient>
     </View>
@@ -198,40 +190,85 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  wavesContainer: {
+  halo: {
+    position: 'absolute',
+    width: 340,
+    height: 340,
+    borderRadius: 170,
+    backgroundColor: 'rgba(100, 125, 255, 0.16)',
+  },
+  rings: {
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  wave: {
+  ring: {
     position: 'absolute',
-    borderWidth: 2,
-    borderColor: 'rgba(100, 150, 250, 0.3)',
+    borderWidth: 1.5,
   },
-  glowContainer: {
-    position: 'absolute',
-    width: 300,
-    height: 300,
+  orbWrap: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glow: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(100, 150, 250, 0.1)',
-    shadowColor: '#6496FA',
+  orb: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.blue,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 50,
+    shadowOpacity: 0.9,
+    shadowRadius: 40,
+    elevation: 20,
   },
-  contentContainer: {
+  orbInner: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 234, 242, 0.25)',
+  },
+  orbEdge: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 1,
+    borderColor: 'rgba(232, 234, 242, 0.2)',
+  },
+  textWrap: {
+    position: 'absolute',
+    bottom: '18%',
     alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
+    gap: 14,
   },
-  logo: {
-    width: 250,
-    height: 250,
+  title: {
+    fontSize: 34,
+    fontWeight: '300' as const,
+    color: theme.text,
+    letterSpacing: 10,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 11,
+    color: theme.textDim,
+    letterSpacing: 5,
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  eqRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 5,
+    height: 26,
+    marginTop: 10,
+  },
+  eqBar: {
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: theme.blue,
+    opacity: 0.85,
   },
 });
